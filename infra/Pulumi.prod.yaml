@@ -1,0 +1,2 @@
+environment:
+ - core-infrastructure/prod #provisioned dynamically by core-infrastructure project

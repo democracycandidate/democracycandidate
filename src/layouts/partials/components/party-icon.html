@@ -1,0 +1,9 @@
+{{ $party:= title .Party }}
+
+{{ if eq $party "Democrat" }}
+    <i class="fa-solid fa-democrat mr-2"></i>{{ $party }}
+{{ else if eq $party "Republican" }}
+    <i class="fa-solid fa-republican mr-2"></i>{{ $party }}
+{{ else }}
+    <i class="fa-solid fa-flag-usa mr-2"></i>{{ $party }}
+{{ end }}

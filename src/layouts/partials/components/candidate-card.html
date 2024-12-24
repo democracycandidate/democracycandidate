@@ -1,0 +1,29 @@
+<div class="bg-body dark:bg-darkmode-body">
+  {{ $avatar:= .Params.avatar }}
+  {{ if $avatar }}
+    {{ partial "image" (dict "Src" $avatar "Context" .Page "Alt" .Title "Class" "mb-6 w-full rounded") }}
+  {{ end }}
+  <h4 class="mb-3">
+    <a href="{{ .RelPermalink }}">
+      {{ .Title }}
+    </a>
+  </h4>
+  {{ $categories:= .Params.categories }}
+  {{ if $categories }}
+    <ul class="mb-4">
+      <li class="mr-4 inline-block">
+        <i class="fa-regular fa-circle-user mr-2"></i>{{ .Params.candidate }}
+      </li>
+      {{ $party:= .Params.party }}
+      {{ if $party }}
+      <li class="mr-4 inline-block">
+        {{ partial "components/party-icon" (dict "Context" .Page "Party" $party) }}
+      </li>
+      {{ end }}
+    </ul>
+  {{ end }}
+  <p class="mb-6">{{ .Params.about }}</p>
+  <a class="btn btn-outline-primary btn-sm" href="{{ .RelPermalink }}">
+    {{ T "read_more" }}
+  </a>
+</div>

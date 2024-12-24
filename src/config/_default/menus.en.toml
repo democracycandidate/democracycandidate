@@ -1,0 +1,38 @@
+############# English navigation ##############
+
+# main menu
+[[main]]
+name = "Home"
+url = "/"
+weight = 1
+
+[[main]]
+name = "About"
+url = "/about"
+weight = 2
+
+[[main]]
+name = "The Pledge"
+url = "/pledge"
+weight = 3
+
+[[main]]
+name = "Candidates"
+url = "/candidates"
+weight = 4
+
+# footer menu
+[[footer]]
+name = "About"
+url = "/about"
+weight = 1
+
+[[footer]]
+name = "Elements"
+url = "/elements"
+weight = 2
+
+[[footer]]
+name = "Privacy Policy"
+url = "/privacy"
+weight = 3

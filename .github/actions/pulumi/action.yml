@@ -1,0 +1,53 @@
+name: Pulumi Steps
+
+inputs:
+  command:
+    type: string
+    required: true
+  organization:
+    type: string
+    required: true
+  requested-token-type:
+    type: string
+    required: true
+  scope:
+    type: string
+    required: true
+  stack-name:
+    type: string
+  work-dir:
+    type: string
+    default: ./infra
+outputs:
+  storageAccountName:
+    description: "Name of the provisioned storage account"
+    value: ${{ steps.pulumi.outputs.storageAccountName }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Pulumi Auth
+      uses: pulumi/auth-actions@v1
+      with:
+        organization: ${{ inputs.organization }}
+        requested-token-type: ${{ inputs.requested-token-type }}
+        scope: ${{ inputs.scope }}
+        token-expiration: 600
+
+    - name: Setup Node for Pulumi
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install for Pulumi
+      working-directory: ${{ inputs.work-dir }}
+      shell: bash
+      run: npm ci
+
+    - name: Pulumi Command
+      id: pulumi
+      uses: pulumi/actions@v6
+      with:
+        command: ${{ inputs.command }}
+        stack-name: ${{ inputs.stack-name }}
+        work-dir: ${{ inputs.work-dir }}

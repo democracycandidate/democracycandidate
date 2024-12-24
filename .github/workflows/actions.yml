@@ -1,0 +1,136 @@
+name: Build and Publish Site
+
+on:
+  - push
+  - pull_request
+
+env:
+  PULUMI_STACK: democracycandidate/prod
+  PULUMI_ORG: zacdirect
+  PULUMI_USER: user:zacdirect
+  PULUMI_TOKEN: urn:pulumi:token-type:access_token:personal
+  PULUMI_AZURE_ESC_ENVIRONMENT: zacdirect/core-infrastructure/prod
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./src
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true  # Fetch Hugo themes (true OR recursive)
+          fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3
+        with:
+          hugo-version: '0.140.0'
+          extended: true
+
+      - name: Build
+        run: hugo --minify
+
+      - name: Upload Build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Build
+          path: ./src/public
+          retention-days: 1
+          overwrite: true
+          if-no-files-found: error
+
+  test:
+    name: Test
+    needs: [ build ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download Build
+      uses: actions/download-artifact@v4
+      with:
+        name: Build
+        path: ./public
+
+    - name: Broken Link Checker
+      uses: untitaker/hyperlink@0.1.43
+      with:
+        args: ./public --sources ./src
+
+    - name: Secret Scanning
+      uses: trufflesecurity/trufflehog@main
+      with:
+        extra_args: --results=verified,unknown
+
+  infra:
+    name: IaC
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./infra
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pulumi Preview
+        uses: ./.github/actions/pulumi
+        with:
+          stack-name: ${{ env.PULUMI_STACK }}
+          organization: ${{ env.PULUMI_ORG }}
+          requested-token-type: ${{ env.PULUMI_TOKEN }}
+          scope: ${{ env.PULUMI_USER }}
+          command: preview
+
+  deploy:
+    name: Deploy
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    needs: [ test, infra ]
+    defaults:
+      run:
+        working-directory: ./src
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pulumi Up
+        id: pulumi
+        uses: ./.github/actions/pulumi
+        with:
+          stack-name: ${{ env.PULUMI_STACK }}
+          organization: ${{ env.PULUMI_ORG }}
+          requested-token-type: urn:pulumi:token-type:access_token:personal
+          scope: ${{ env.PULUMI_USER }}
+          command: up
+
+      - name: Azure CLI Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Download Build
+        uses: actions/download-artifact@v4
+        with:
+          name: Build
+          path: ./src/public
+
+      - name: Azure Deploy
+        uses: azure/CLI@v2
+        env:
+          STORAGE_ACCOUNT_NAME: ${{ steps.pulumi.outputs.storageAccountName }}
+        with:
+          inlineScript: |
+            az storage blob sync --account-name $STORAGE_ACCOUNT_NAME --container '$web' --source $GITHUB_WORKSPACE/src/public

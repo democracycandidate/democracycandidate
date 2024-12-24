@@ -1,0 +1,80 @@
+{{ define "main" }}
+  <section class="section pt-7">
+    <div class="container">
+      <div class="row justify-center">
+        <article class="lg:col-10">
+          {{ $image:= .Params.image }}
+          {{ if $image }}
+            <div class="mb-10">
+              {{ partial "image" (dict "Src" $image "Context" .Page "Alt" .Title "Class" "w-full rounded") }}
+            </div>
+          {{ end }}
+          <h1 class="h2 mb-4">
+            {{ .Title }}
+          </h1>
+          <ul class="mb-4">
+            <li class="mr-4 inline-block">
+              <i class="fa-regular fa-circle-user mr-2"></i>{{ .Params.candidate }}
+            </li>
+            {{ $categories:= .Params.categories }}
+            {{ if $categories }}
+              <li class="mr-4 inline-block">
+                <i class="fa-regular fa-folder mr-2"></i>
+                {{ range $i,$p:= $categories }}
+                  <a
+                    href="{{ `categories/` | relLangURL }}{{ . | urlize | lower }}/"
+                    class=""
+                    >{{ . | humanize }}{{ if ne $i (sub (len $categories) 1) }}
+                      {{ "," }}
+                    {{ end }}
+                  </a>
+                {{ end }}
+              </li>
+            {{ end }}
+            <li class="mr-4 inline-block">
+              <i class="fa-solid fa-check-to-slot mr-2"></i>
+              {{ time.Format ":date_long" .Params.election_date }}
+            </li>
+            {{ $party:= .Params.party }}
+            {{ if $party }}
+            <li class="mr-4 inline-block">
+              {{ partial "components/party-icon" (dict "Context" .Page "Party" $party) }}
+            </li>
+            {{ end }}
+          </ul>
+          <div class="content mb-10">
+            {{ $avatar:= .Params.avatar }}
+            {{ if $avatar }}
+              {{ partial "image" (dict "Src" $avatar "Context" .Page "Alt" (T "candidate_photo") "Class" "w-64 float-right pl-1.5") }}
+            {{ end }}
+            <h3 id="about">{{ T "about" }}</h3>
+            <p>{{ .Params.about }}</p>
+            {{ .Content }}
+          </div>
+          <div class="row items-start justify-between">
+            {{ $tags:= .Params.tags }}
+            {{ if $tags }}
+              <div class="lg:col-5 mb-10 flex items-center lg:mb-0">
+                <h5 class="mr-3">{{ T "tags" }} :</h5>
+                <ul>
+                  {{ range $i,$p:= $tags }}
+                    <li class="inline-block">
+                      <a
+                        class="bg-theme-light hover:bg-primary dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark m-1 block rounded px-3 py-1 hover:text-white"
+                        href="{{ `tags/` | relLangURL }}{{ . | urlize | lower }}/">
+                        {{ . | humanize }}
+                      </a>
+                    </li>
+                  {{ end }}
+                </ul>
+              </div>
+            {{ end }}
+            <div class="lg:col-4 flex items-center">
+              {{ partial "social-share" (dict "Context" . "Class" "share-icons" "Title" (T "share") "ShareMessage" (T "social_share_subject") "Whatsapp" false "Telegram" false "Linkedin" false "Pinterest" false "Tumblr" false "Vk" false) }}
+            </div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+{{ end }}

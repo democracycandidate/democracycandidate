@@ -15,6 +15,7 @@ env:
 permissions:
   id-token: write
   contents: read
+  actions: read
 
 jobs:
   infra:
@@ -70,6 +71,8 @@ jobs:
         with:
           name: Build
           path: ./src/public
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
 
       - name: Azure Deploy
         uses: azure/CLI@v2

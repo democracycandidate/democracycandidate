@@ -1,14 +1,14 @@
 ---
 title: "The Pledge"
 # meta title
-meta_title: "Pro Democracy Pledge"
+meta_title: "Pro-Democracy Pledge"
 # meta description
-description: "The pro democracy pledge that all candidates must sign before being listed here."
+description: "The pro-democracy pledge that all candidates must sign before being listed here."
 # save as draft
 draft: false
 ---
 
-At the time of writing this is verbatim the same pledge from [Defense of Democracy](https://defenseofdemocracy.org/pledge/).  This project has no affiliation with them, but saw no need to revise or change what they have already put forward.
+As of January, 2025, this pledge is copied directly from [Defense of Democracy](https://defenseofdemocracy.org/pledge/).  Although this project has no affiliation with Defense of Democracy, we see no need to revise or change what they have put forward.
 
 > I acknowledge and celebrate the diverse mosaic within my community, spanning religions, cultures, gender identities, sexual orientations and backgrounds.
 

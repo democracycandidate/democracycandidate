@@ -1,5 +1,5 @@
 # Democracy Candidate
-This project receives no support from PACs or parties.  Any candidate can be featured here by agreeing to a pro democracy pledge.
+This project receives no support from PACs or parties.  Any candidate can be featured here by agreeing to a pro-democracy pledge.
 
 ## Democracy Pledge
 

@@ -63,7 +63,7 @@ content = "You must replace the **baseURL** in **hugo.toml** file when deploying
 # seo module: https://github.com/gethugothemes/hugo-modules/tree/master/seo-tools/basic-seo
 [metadata]
 keywords = ["Democracy", "Candidates", "Election", "U.S.", "America"]
-description = "Simple bios and backgrounds of American pro democracy candidates."
+description = "Simple bios and backgrounds of American pro-democracy candidates."
 author = "democracycandidate"
 image = "images/og-image.png"
 

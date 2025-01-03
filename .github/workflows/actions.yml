@@ -80,6 +80,7 @@ jobs:
 
   infra:
     name: IaC
+    if: github.repository == github.event.pull_request.head.repo.full_name
     runs-on: ubuntu-latest
     defaults:
       run:

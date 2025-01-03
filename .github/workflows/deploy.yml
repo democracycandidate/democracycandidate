@@ -1,8 +1,10 @@
-name: Build and Publish Site
+name: Deploy
 
 on:
-  - push
-  - pull_request
+  workflow_run:
+    workflows: ["Build and Test"]
+    types:
+      - completed
 
 env:
   PULUMI_STACK: prod
@@ -15,72 +17,9 @@ permissions:
   contents: read
 
 jobs:
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./src
-    concurrency:
-      group: ${{ github.workflow }}-${{ github.ref }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: true  # Fetch Hugo themes (true OR recursive)
-          fetch-depth: 0    # Fetch all history for .GitInfo and .Lastmod
-
-      - name: Setup Hugo
-        uses: peaceiris/actions-hugo@v3
-        with:
-          hugo-version: '0.140.0'
-          extended: true
-
-      - name: Install Hugo Helpers
-        working-directory: ./src
-        shell: bash
-        run: npm ci
-
-      - name: Build
-        run: npm run build
-
-      - name: Upload Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: Build
-          path: ./src/public
-          retention-days: 1
-          overwrite: true
-          if-no-files-found: error
-
-  test:
-    name: Test
-    needs: [ build ]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-
-    - name: Download Build
-      uses: actions/download-artifact@v4
-      with:
-        name: Build
-        path: ./public
-
-    - name: Broken Link Checker
-      uses: untitaker/hyperlink@0.1.43
-      with:
-        args: ./public --sources ./src
-
-    - name: Secret Scanning
-      uses: trufflesecurity/trufflehog@main
-      with:
-        extra_args: --results=verified,unknown
-
   infra:
     name: IaC
-    if: github.repository == github.event.pull_request.head.repo.full_name
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -100,7 +39,7 @@ jobs:
     name: Deploy
     if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
-    needs: [ test, infra ]
+    needs: [ infra ]
     defaults:
       run:
         working-directory: ./src

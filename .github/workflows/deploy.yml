@@ -80,4 +80,5 @@ jobs:
           STORAGE_ACCOUNT_NAME: ${{ steps.pulumi.outputs.storageAccountName }}
         with:
           inlineScript: |
+            tdnf install -y azcopy; # Needed until at least 2025/02/11 https://github.com/Azure/azure-cli/issues/30635
             az storage blob sync --account-name $STORAGE_ACCOUNT_NAME --container '$web' --source $GITHUB_WORKSPACE/src/public

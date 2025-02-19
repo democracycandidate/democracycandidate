@@ -8,9 +8,9 @@ banner:
       - "They or somebody on their behalf [posted about them](https://github.com/democracycandidate/democracycandidate)."
   image: "/images/voter.png"
   button:
-    enable: false
-    label: ""
-    link: ""
+    enable: true
+    label: "Voter Registration"
+    link: "https://vote.gov/"
 
 # Features
 features:

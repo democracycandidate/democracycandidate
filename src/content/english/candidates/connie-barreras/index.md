@@ -33,7 +33,7 @@ Together, Isabelle, Connie, and April share a deep connection to Glendale Height
 As a team, Isabelle, Connie, and April bring decades of professional and volunteer experience to their roles:
 
 * [Isabelle Baldwin](../isabelle-baldwin/): A visionary leader and advocate for library innovation.
-* [Connie Barreras](..connie-barreras): A collaborator and champion for inclusivity and access.
+* [Connie Barreras](../connie-barreras): A collaborator and champion for inclusivity and access.
 * [April Hieronymus](../april-hieronymus/): A results-driven Trustee with expertise in business, design, and real estate.
 
 Their collective skills ensure the library board operates effectively and efficiently, with a shared goal of keeping the library a vibrant hub for learning, growth, and connection.

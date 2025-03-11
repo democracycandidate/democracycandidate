@@ -6,7 +6,7 @@ candidate: "Greg Martucci"
 party: "Democrat"
 election_date: 2025-04-01T12:00:00Z
 categories: ["Township", "Illinois"]
-tags: ["Bloomingdale", "Roselle, IL"]
+tags: ["Bloomingdale, IL", "Roselle, IL"]
 draft: false
 avatar: "greg-martucci.jpeg"
 about: "As a practicing Illinois attorney for the past 40 years, Greg Martucci is an officer of the legal system and a public citizen who is now called to public service.  As a Bloomingdale Township resident for 30 years, residing in both Roselle and Bloomingdale, owning a Roselle law firm for the past 29 years, and building a 5-star reputation for Martucci Law, Greg has earned awards from the Roselle Chamber of Commerce and Bloomingdale Chamber of Commerce as \"Business Person of the Year\" and \"Best Legal Services.\""

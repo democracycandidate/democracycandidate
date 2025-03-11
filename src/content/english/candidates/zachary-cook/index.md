@@ -28,3 +28,7 @@ A start-up I helped grow from four employees to over 50 and into a successful ac
 ### Collaboration
 
 I am particularly focused on fostering collaboration among candidates who share my belief in moderate, thoughtful governance. With four open seats this election, I am interested in running as a quorum with others who are committed to making decisions based on objectivity, and without partisan squabbling.
+
+### Endorsements
+
+* [The Independent Voters of Illinois - Independent Precinct Organization](https://www.iviipo.org/)

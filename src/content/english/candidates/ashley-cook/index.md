@@ -41,3 +41,7 @@ Ashley and [Barbara](../barbara-k-murray/) bring complementary strengths that ma
 
 Vote Ashley Cook and Barbara Murray for Roselle Public Library District Trustee. Together, they will connect generations, strengthen our community, and create a library that inspires and empowers us all. 
 
+### Endorsements
+
+* [The Independent Voters of Illinois - Independent Precinct Organization](https://www.iviipo.org/)
+* [The Young Democrats of DuPage County](https://www.instagram.com/youngdemsofdupage/)

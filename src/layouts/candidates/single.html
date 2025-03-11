@@ -41,6 +41,14 @@
               {{ partial "components/party-icon" (dict "Context" .Page "Party" $party) }}
             </li>
             {{ end }}
+            {{ if .Params.website }}
+            <li class="mr-4 inline-block">
+              <a
+                class=""
+                href="{{ .Params.website }}"><i class="fa-regular fa-link mr-2"></i>{{ (T "website") }}
+              </a>
+            </li>
+            {{ end }}
           </ul>
           <div class="content mb-10">
             {{ $avatar:= .Params.avatar }}

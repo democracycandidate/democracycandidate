@@ -27,7 +27,11 @@ A start-up I helped grow from four employees to over 50 and into a successful ac
 
 ### Collaboration
 
-I am particularly focused on fostering collaboration among candidates who share my belief in moderate, thoughtful governance. With four open seats this election, I am interested in running as a quorum with others who are committed to making decisions based on objectivity, and without partisan squabbling.
+This board consists of seven people and I feel voters are served best by engaged individuals that can work well as a team.  As a newcomer to this I have learned a great deal about the position and other candidates as quickly as I can.  It was exciting to be offered the opportunity to make my [personal views known](https://www.dailyherald.com/20250314/local-politics/zachary-cook-2025-candidate-for-lake-park-high-school-district-108-board/) and read about [other candidate positions](https://www.dailyherald.com/topics/lake-park-high-school-district-108/) thanks to the Daily Herald's long tradition of posting candidate questionnaire responses for all to read.
+
+It's been a long time since I've been on a stage, and I was delighted to recently share it with other qualified community members at a public forum courtesy of the League of Women Voters and Lake Park High School.  Video of that event has been made readily available in two parts ([Part 1](https://www.youtube.com/watch?v=OphUBQffHdQ) | [Part 2](https://www.youtube.com/watch?v=NKqd6NKqXg4)).
+
+Building a good team requires active participation, and I feel voters should narrow their choices to candidates who elected to be interviewed for the job they are applying for. Among those candidates, who did the diligence of making their positions known in various public forums, I think voters would be well served by a team composed of any combination of us. I was impressed by everyone who shared the League of Women Voters stage with me.  Local races are so often left unopposed, but the opportunity to fully embrace new voices presents itself in this race.  I believe the community and students will be best served by seizing the chance for fresh perspectives by electing myself, Melissa Johnson, Donna Limper, and Andrea Wittig.
 
 ### Endorsements
 

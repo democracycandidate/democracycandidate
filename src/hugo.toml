@@ -34,7 +34,7 @@ shortname = 'themefisher-template' # we use disqus to show comments in blog post
 ########################## Pagination ############################
 [pagination]
 disableAliases = false
-pagerSize = 10
+pagerSize = 25
 path = 'page'
 
 

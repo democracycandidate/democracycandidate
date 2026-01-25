@@ -1,0 +1,24 @@
+{{ define "main" }}
+  {{ partial "page-header" . }}
+
+  <section class="section-sm">
+    <div class="container">
+      <div class="row justify-center">
+        <div class="lg:col-10">
+          <div class="content">
+            {{ partial "pledge-content.html" . }}
+          </div>
+          
+          {{ if .Params.show_candidate_info }}
+            <hr class="my-8">
+            
+            <div class="content">
+              <h2>For Candidates</h2>
+              <p>If you're running for office and want to be listed on this site, you'll need to sign this pledge as part of your submission. See the <a href="/running">Getting Started</a> guide for more information on how to create your candidate profile.</p>
+            </div>
+          {{ end }}
+        </div>
+      </div>
+    </div>
+  </section>
+{{ end }}

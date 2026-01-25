@@ -1,0 +1,123 @@
+{{ define "main" }}
+{{ partial "page-header" . }}
+
+<section class="section">
+  <div class="container">
+    {{/* Check if this is the tags page */}}
+    {{ if eq .Permalink (`tags/` | absLangURL) }}
+      {{ $today := now }}
+      {{ $allCandidates := where site.RegularPages "Section" "candidates" }}
+      
+      {{/* Collect tags grouped by election status */}}
+      {{ $upcomingTags := slice }}
+      {{ $pastTags := slice }}
+      
+      {{ range $allCandidates }}
+        {{ $electionDate := .Params.election_date }}
+        {{ $isUpcoming := false }}
+        {{ if $electionDate }}
+          {{ if ge (time $electionDate) $today }}
+            {{ $isUpcoming = true }}
+          {{ end }}
+        {{ end }}
+        
+        {{ range .Params.tags }}
+          {{ if $isUpcoming }}
+            {{ $upcomingTags = $upcomingTags | append . }}
+          {{ else }}
+            {{ $pastTags = $pastTags | append . }}
+          {{ end }}
+        {{ end }}
+      {{ end }}
+      
+      {{ $upcomingTags = $upcomingTags | uniq }}
+      {{ $pastTags = $pastTags | uniq }}
+      
+      {{/* Upcoming Election Tags */}}
+      {{ if gt (len $upcomingTags) 0 }}
+        <div class="mb-12">
+          <h2 class="h3 mb-6 text-center">
+            <i class="fa-solid fa-calendar-check mr-2 text-primary"></i>
+            {{ T "upcoming_election_tags" | default "Upcoming Election Tags" }}
+          </h2>
+          <ul class="text-center">
+            {{ range $upcomingTags }}
+              {{ with site.Taxonomies.tags.Get . }}
+                <li class="m-3 inline-block">
+                  <a
+                    href="{{ .Page.Permalink }}"
+                    class="bg-primary hover:bg-primary/80 text-white dark:bg-primary dark:hover:bg-primary/80 block rounded px-4 py-2 text-xl transition">
+                    {{ .Page.Title }}
+                    <span class="bg-white/20 ml-2 rounded px-2">
+                      {{ .Count }}
+                    </span>
+                  </a>
+                </li>
+              {{ end }}
+            {{ end }}
+          </ul>
+        </div>
+      {{ end }}
+      
+      {{/* Past Election Tags */}}
+      {{ if gt (len $pastTags) 0 }}
+        <div class="mb-8">
+          <h2 class="h3 mb-6 text-center text-gray-500">
+            <i class="fa-solid fa-clock-rotate-left mr-2"></i>
+            {{ T "historical_election_tags" | default "Historical Election Tags" }}
+          </h2>
+          <ul class="text-center">
+            {{ range $pastTags }}
+              {{ with site.Taxonomies.tags.Get . }}
+                <li class="m-3 inline-block">
+                  <a
+                    href="{{ .Page.Permalink }}"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 block rounded px-4 py-2 text-xl transition">
+                    {{ .Page.Title }}
+                    <span class="bg-gray-500/20 dark:bg-gray-900/20 ml-2 rounded px-2">
+                      {{ .Count }}
+                    </span>
+                  </a>
+                </li>
+              {{ end }}
+            {{ end }}
+          </ul>
+        </div>
+      {{ end }}
+      
+    {{/* Categories page - use default layout */}}
+    {{ else if eq .Permalink (`categories/` | absLangURL) }}
+      <ul class="text-center">
+        {{ range site.Taxonomies.categories.ByCount }}
+          <li class="m-3 inline-block">
+            <a
+              href="{{ .Page.Permalink }}"
+              class="bg-theme-light text-dark dark:bg-darkmode-theme-light dark:text-darkmode-dark block rounded px-4 py-2 text-xl">
+              {{ .Page.Title }}
+              <span class="bg-body dark:bg-darkmode-body ml-2 rounded px-2">
+                {{ .Count }}
+              </span>
+            </a>
+          </li>
+        {{ end }}
+      </ul>
+    {{/* Other taxonomy terms pages */}}
+    {{ else }}
+      <ul class="text-center">
+        {{ range .Data.Terms.ByCount }}
+          <li class="m-3 inline-block">
+            <a
+              href="{{ .Page.Permalink }}"
+              class="bg-theme-light text-dark dark:bg-darkmode-theme-light dark:text-darkmode-dark block rounded px-4 py-2 text-xl">
+              {{ .Page.Title }}
+              <span class="bg-body dark:bg-darkmode-body ml-2 rounded px-2">
+                {{ .Count }}
+              </span>
+            </a>
+          </li>
+        {{ end }}
+      </ul>
+    {{ end }}
+  </div>
+</section>
+{{ end }}

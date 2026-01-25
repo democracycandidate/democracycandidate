@@ -1,21 +1,37 @@
+{{/*
+Taxonomy Template - For individual tag/category pages
+Shows candidates grouped by upcoming/past elections
+*/}}
 {{ define "main" }}
-  {{ partial "page-header" . }}
+{{ partial "page-header" . }}
 
+<section class="section">
+  <div class="container">
+    {{/* Check if this taxonomy term contains candidate pages */}}
+    {{ $hasCandidates := false }}
+    {{ range .Data.Pages }}
+    {{ if eq .Section "candidates" }}
+    {{ $hasCandidates = true }}
+    {{ end }}
+    {{ end }}
 
-  <section class="section">
-    <div class="container">
-      <div class="row gx-5">
-        <!-- Candidates -->
-        <div class="lg:col-8">
-          <div class="row">
-            {{ range .Data.Pages }}
-              <div class="md:col-6 mb-14">
-                {{ partial "components/candidate-card" . }}
-              </div>
-            {{ end }}
+    {{ if $hasCandidates }}
+    {{/* Use the grouped candidate list for candidate-related taxonomies */}}
+    {{ partial "components/candidate-list-grouped" (dict "Pages" .Data.Pages "ShowSidebar" true "Context" .) }}
+    {{ else }}
+    {{/* Fallback to default blog card layout for non-candidate content */}}
+    <div class="row gx-5">
+      <div class="lg:col-8">
+        <div class="row">
+          {{ range .Data.Pages }}
+          <div class="md:col-6 mb-14">
+            {{ partial "components/blog-card" . }}
           </div>
+          {{ end }}
         </div>
       </div>
     </div>
-  </section>
+    {{ end }}
+  </div>
+</section>
 {{ end }}

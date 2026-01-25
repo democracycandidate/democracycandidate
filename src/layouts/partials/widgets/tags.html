@@ -1,0 +1,77 @@
+<!-- tags widget with upcoming/historical context -->
+{{ if isset site.Taxonomies "tags" }}
+{{ if not (eq (len site.Taxonomies.tags) 0) }}
+{{ $today := now }}
+{{ $allCandidates := where site.RegularPages "Section" "candidates" }}
+
+{{/* Collect tags grouped by election status */}}
+{{ $upcomingTags := slice }}
+{{ $pastTags := slice }}
+
+{{ range $allCandidates }}
+{{ $electionDate := .Params.election_date }}
+{{ $isUpcoming := false }}
+{{ if $electionDate }}
+{{ if ge (time $electionDate) $today }}
+{{ $isUpcoming = true }}
+{{ end }}
+{{ end }}
+
+{{ range .Params.tags }}
+{{ if $isUpcoming }}
+{{ $upcomingTags = $upcomingTags | append . }}
+{{ else }}
+{{ $pastTags = $pastTags | append . }}
+{{ end }}
+{{ end }}
+{{ end }}
+
+{{ $upcomingTags = $upcomingTags | uniq }}
+{{ $pastTags = $pastTags | uniq }}
+
+<div class="mb-8">
+  <h5 class="mb-6">{{ T "tags" }}</h5>
+  <div class="bg-theme-light dark:bg-darkmode-theme-light rounded p-6">
+
+    {{/* Upcoming Election Tags */}}
+    {{ if gt (len $upcomingTags) 0 }}
+    <h6 class="mb-3 text-base font-semibold">
+      <i class="fa-solid fa-calendar-check mr-1"></i>
+      {{ T "upcoming_elections" | default "Upcoming Elections" }}
+    </h6>
+    <ul class="mb-4">
+      {{ range $upcomingTags }}
+      {{ with site.Taxonomies.tags.Get . }}
+      <li class="inline-block">
+        <a class="bg-body dark:bg-darkmode-body hover:bg-primary dark:hover:bg-darkmode-primary text-text dark:text-darkmode-light hover:text-white dark:hover:text-dark border border-primary m-1 block rounded px-3 py-1 transition" href="{{ .Page.RelPermalink }}">{{ .Page.Title }}</a>
+      </li>
+      {{ end }}
+      {{ end }}
+    </ul>
+    {{ end }}
+
+    {{/* Past Election Tags */}}
+    {{ if gt (len $pastTags) 0 }}
+    <h6 class="mb-3 text-base font-semibold text-gray-500">
+      <i class="fa-solid fa-clock-rotate-left mr-1"></i>
+      {{ T "historical_elections" | default "Historical" }}
+    </h6>
+    <ul>
+      {{ range $pastTags }}
+      {{ with site.Taxonomies.tags.Get . }}
+      <li class="inline-block">
+        <a class="hover:bg-gray-400 text-gray-600 hover:text-white dark:bg-darkmode-body dark:hover:bg-gray-600 dark:text-gray-400 {{ if (and (eq $.Page.Kind `term`) (eq $.Page.Type `tags`) (eq $.Page.Title .Page.Title)) }}
+                      bg-gray-400 text-white dark:bg-gray-600
+                    {{ end }} m-1 block rounded bg-gray-200 px-3 py-1 transition" href="{{ .Page.RelPermalink }}">
+          {{ .Page.Title }}
+        </a>
+      </li>
+      {{ end }}
+      {{ end }}
+    </ul>
+    {{ end }}
+
+  </div>
+</div>
+{{ end }}
+{{ end }}

@@ -1,88 +1,187 @@
 {{ define "main" }}
-  <section class="section pt-7">
-    <div class="container">
-      <div class="row justify-center">
-        <article class="lg:col-10">
-          {{ $image:= .Params.image }}
-          {{ if $image }}
-            <div class="mb-10">
-              {{ partial "image" (dict "Src" $image "Context" .Page "Alt" .Title "Class" "w-full rounded") }}
-            </div>
-          {{ end }}
-          <h1 class="h2 mb-4">
+{{ $today := now }}
+{{/* Add 7-day buffer after election date before considering it "past" */}}
+{{ $bufferDays := 7 }}
+{{ $cutoffDate := $today.AddDate 0 0 (mul $bufferDays -1) }}
+{{ $electionDate := .Params.election_date }}
+{{ $candidateName := .Params.candidate }}
+{{ $currentPage := . }}
+{{ $isPast := false }}
+{{ if $electionDate }}
+{{ $isPast = lt (time $electionDate) $cutoffDate }}
+{{ end }}
+
+{{/* Find other candidacies by the same person */}}
+{{ $otherCandidacies := slice }}
+{{ $upcomingCandidacies := slice }}
+{{ if $candidateName }}
+{{ range where site.RegularPages "Section" "candidates" }}
+{{ if and (eq .Params.candidate $candidateName) (ne .RelPermalink $currentPage.RelPermalink) }}
+{{ $otherCandidacies = $otherCandidacies | append . }}
+{{ if .Params.election_date }}
+{{ if ge (time .Params.election_date) $cutoffDate }}
+{{ $upcomingCandidacies = $upcomingCandidacies | append . }}
+{{ end }}
+{{ end }}
+{{ end }}
+{{ end }}
+{{ end }}
+
+{{/* Alert banner for past elections with upcoming candidacies */}}
+{{ if and $isPast (gt (len $upcomingCandidacies) 0) }}
+<div class="bg-primary text-white py-4">
+  <div class="container">
+    <div class="flex items-center justify-center">
+      <i class="fa-solid fa-circle-info mr-3 text-xl"></i>
+      <span class="text-lg font-semibold">
+        {{ T "newer_candidacy_notice" | default "This candidate is running in an upcoming election!" }}
+        {{ range $upcomingCandidacies }}
+        <a href="{{ .RelPermalink }}" class="underline hover:no-underline ml-2">
+          {{ T "view_upcoming" | default "View" }}: {{ .Title }}
+        </a>
+        {{ end }}
+      </span>
+    </div>
+  </div>
+</div>
+{{ end }}
+
+<section class="section pt-7">
+  <div class="container">
+    <div class="row justify-center">
+      <article class="lg:col-10">
+        {{ $image:= .Params.image }}
+        {{ if $image }}
+        <div class="mb-10">
+          {{ partial "image" (dict "Src" $image "Context" .Page "Alt" .Title "Class" "w-full rounded") }}
+        </div>
+        {{ end }}
+
+        <div class="mb-4 flex items-center justify-between gap-4">
+          <h1 class="h2">
             {{ .Title }}
           </h1>
-          <ul class="mb-4">
-            <li class="mr-4 inline-block">
-              <i class="fa-regular fa-circle-user mr-2"></i>{{ .Params.candidate }}
-            </li>
-            {{ $categories:= .Params.categories }}
-            {{ if $categories }}
-              <li class="mr-4 inline-block">
-                <i class="fa-regular fa-folder mr-2"></i>
-                {{ range $i,$p:= $categories }}
-                  <a
-                    href="{{ `categories/` | relLangURL }}{{ . | urlize | lower }}/"
-                    class=""
-                    >{{ . | humanize }}{{ if ne $i (sub (len $categories) 1) }}
-                      {{ "," }}
-                    {{ end }}
-                  </a>
-                {{ end }}
-              </li>
+          {{/* Election Status Badge - floated right */}}
+          {{ if $electionDate }}
+          {{ if $isPast }}
+          <span
+            class="inline-block rounded bg-gray-400 px-3 py-2 text-sm font-semibold text-white dark:bg-gray-600 whitespace-nowrap">
+            <i class="fa-solid fa-clock-rotate-left mr-1"></i>{{ T "past_election" | default "Past Election" }}
+          </span>
+          {{ else }}
+          <span class="inline-block rounded bg-primary px-3 py-2 text-sm font-semibold text-white whitespace-nowrap">
+            <i class="fa-solid fa-calendar-check mr-1"></i>{{ T "upcoming_election" | default "Upcoming Election" }}
+          </span>
+          {{ end }}
+          {{ end }}
+        </div>
+        <ul class="mb-4">
+          <li class="mr-4 inline-block">
+            <i class="fa-regular fa-circle-user mr-2"></i>{{ .Params.candidate }}
+          </li>
+          {{ $categories:= .Params.categories }}
+          {{ if $categories }}
+          <li class="mr-4 inline-block">
+            <i class="fa-regular fa-folder mr-2"></i>
+            {{ range $i,$p:= $categories }}
+            <a href="{{ `categories/` | relLangURL }}{{ . | urlize | lower }}/"
+              class="inline-block rounded border border-primary bg-body px-2 py-0.5 text-text transition hover:bg-primary hover:text-white dark:bg-darkmode-body dark:text-darkmode-light dark:hover:bg-darkmode-primary dark:hover:text-dark">{{
+              . | humanize }}</a>
             {{ end }}
-            <li class="mr-4 inline-block">
-              <i class="fa-solid fa-check-to-slot mr-2"></i>
-              {{ time.Format ":date_long" .Params.election_date }}
-            </li>
-            {{ $party:= .Params.party }}
-            {{ if $party }}
-            <li class="mr-4 inline-block">
-              {{ partial "components/party-icon" (dict "Context" .Page "Party" $party) }}
-            </li>
+          </li>
+          {{ end }}
+          {{ $pledgeYear := (time $electionDate).Year }}
+          {{ $pledgeLink := "/pledge" }}
+          {{ if le $pledgeYear 2025 }}
+          {{ $pledgeLink = "/pledge-2025" }}
+          {{ end }}
+          <li class="mr-4 inline-block">
+            <a href="{{ $pledgeLink }}"
+              class="inline-block rounded border border-primary bg-body px-2 py-0.5 text-text transition hover:bg-primary hover:text-white dark:bg-darkmode-body dark:text-darkmode-light dark:hover:bg-darkmode-primary dark:hover:text-dark"><i
+                class="fa-solid fa-hand-holding-heart mr-2"></i>{{ T "pledged" | default "Pledged" }}</a>
+          </li>
+          <li class="mr-4 inline-block">
+            <i class="fa-solid fa-check-to-slot mr-2"></i>
+            {{ time.Format ":date_long" .Params.election_date }}
+          </li>
+          {{ $party:= .Params.party }}
+          {{ if $party }}
+          <li class="mr-4 inline-block">
+            {{ partial "components/party-icon" (dict "Context" .Page "Party" $party) }}
+          </li>
+          {{ end }}
+          {{ if .Params.website }}
+          <li class="mr-4 inline-block">
+            <a class="inline-block rounded border border-primary bg-body px-2 py-0.5 text-text transition hover:bg-primary hover:text-white dark:bg-darkmode-body dark:text-darkmode-light dark:hover:bg-darkmode-primary dark:hover:text-dark"
+              href="{{ .Params.website }}"><i class="fa-regular fa-link mr-2"></i>{{ (T "website") }}</a>
+          </li>
+          {{ end }}
+        </ul>
+        <div class="content mb-10">
+          {{ $avatar:= .Params.avatar }}
+          {{ if $avatar }}
+          {{ partial "image" (dict "Src" $avatar "Context" .Page "Alt" (T "candidate_photo") "Class" "w-64 float-right pl-1.5") }}
+          {{ end }}
+          <h3 id="about">{{ T "about" }}</h3>
+          <p>{{ .Params.about }}</p>
+          {{ .Content }}
+        </div>
+
+        {{/* Other candidacies by this person */}}
+        {{ if gt (len $otherCandidacies) 0 }}
+        <div class="mb-10 rounded-lg bg-theme-light p-6 dark:bg-darkmode-theme-light">
+          <h4 class="mb-4">
+            <i class="fa-solid fa-user-clock mr-2"></i>
+            {{ T "other_candidacies" | default "Other Elections by This Candidate" }}
+          </h4>
+          <ul class="list-inside list-disc">
+            {{ range $otherCandidacies }}
+            {{ $otherIsPast := false }}
+            {{ if .Params.election_date }}
+            {{ $otherIsPast = lt (time .Params.election_date) $cutoffDate }}
             {{ end }}
-            {{ if .Params.website }}
-            <li class="mr-4 inline-block">
-              <a
-                class=""
-                href="{{ .Params.website }}"><i class="fa-regular fa-link mr-2"></i>{{ (T "website") }}
+            <li class="mb-2">
+              <a href="{{ .RelPermalink }}" class="text-primary dark:text-darkmode-primary hover:underline">
+                {{ .Title }}
               </a>
+              <span class="text-sm text-gray-500">
+                ({{ time.Format ":date_long" .Params.election_date }})
+                {{ if not $otherIsPast }}
+                <span class="ml-1 rounded bg-primary px-1 py-0.5 text-xs text-white">{{ T "upcoming" | default
+                  "Upcoming" }}</span>
+                {{ end }}
+              </span>
             </li>
             {{ end }}
           </ul>
-          <div class="content mb-10">
-            {{ $avatar:= .Params.avatar }}
-            {{ if $avatar }}
-              {{ partial "image" (dict "Src" $avatar "Context" .Page "Alt" (T "candidate_photo") "Class" "w-64 float-right pl-1.5") }}
-            {{ end }}
-            <h3 id="about">{{ T "about" }}</h3>
-            <p>{{ .Params.about }}</p>
-            {{ .Content }}
+        </div>
+        {{ end }}
+
+        <div class="row items-start">
+          {{ $tags:= .Params.tags }}
+          {{ if $tags }}
+          <div class="lg:col-7 mb-10 flex items-center lg:mb-0">
+            <h5 class="mr-3 flex-shrink-0">{{ T "tags" }}:</h5>
+            <ul>
+              {{ range $i,$p:= $tags }}
+              <li class="inline-block">
+                <a class="bg-theme-light hover:bg-primary dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark m-1 block rounded px-3 py-1 hover:text-white"
+                  href="{{ `tags/` | relLangURL }}{{ . | urlize | lower }}/">
+                  {{ . }}
+                </a>
+              </li>
+              {{ end }}
+            </ul>
           </div>
-          <div class="row items-start justify-between">
-            {{ $tags:= .Params.tags }}
-            {{ if $tags }}
-              <div class="lg:col-5 mb-10 flex items-center lg:mb-0">
-                <h5 class="mr-3">{{ T "tags" }}:</h5>
-                <ul>
-                  {{ range $i,$p:= $tags }}
-                    <li class="inline-block">
-                      <a
-                        class="bg-theme-light hover:bg-primary dark:bg-darkmode-theme-light dark:hover:bg-darkmode-primary dark:hover:text-dark m-1 block rounded px-3 py-1 hover:text-white"
-                        href="{{ `tags/` | relLangURL }}{{ . | urlize | lower }}/">
-                        {{ . | humanize }}
-                      </a>
-                    </li>
-                  {{ end }}
-                </ul>
-              </div>
-            {{ end }}
-            <div class="lg:col-4 flex items-center">
-              {{ partial "social-share" (dict "Context" . "Class" "share-icons" "Title" (T "share") "ShareMessage" (T "social_share_subject") "Whatsapp" false "Telegram" false "Linkedin" false "Pinterest" false "Tumblr" false "Vk" false) }}
-            </div>
+          {{ end }}
+          <div class="lg:col-5 flex items-center justify-end flex-shrink-0">
+            {{ partial "social-share" (dict "Context" . "Class" "share-icons" "Title" (T "share") "ShareMessage" (T
+            "social_share_subject") "Whatsapp" false "Telegram" false "Linkedin" false "Pinterest" false "Tumblr" false
+            "Vk" false) }}
           </div>
-        </article>
-      </div>
+        </div>
+      </article>
     </div>
-  </section>
+  </div>
+</section>
 {{ end }}

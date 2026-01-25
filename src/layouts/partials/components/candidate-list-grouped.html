@@ -1,0 +1,111 @@
+{{/*
+Candidate List Grouped by Election Status
+
+Params:
+- Pages: Collection of candidate pages to display
+- ShowSidebar: Boolean, whether to show the sidebar
+- Context: The page context for widgets
+*/}}
+
+{{ $pages := .Pages }}
+{{ $showSidebar := .ShowSidebar | default true }}
+{{ $context := .Context }}
+{{ $today := now }}
+{{/* Add 7-day buffer after election date before considering it "past" */}}
+{{ $bufferDays := 7 }}
+{{ $cutoffDate := $today.AddDate 0 0 (mul $bufferDays -1) }}
+
+{{/* Separate upcoming and past elections */}}
+{{ $upcoming := slice }}
+{{ $past := slice }}
+
+{{ range $pages }}
+{{ $electionDate := .Params.election_date }}
+{{ if $electionDate }}
+{{ if ge (time $electionDate) $cutoffDate }}
+{{ $upcoming = $upcoming | append . }}
+{{ else }}
+{{ $past = $past | append . }}
+{{ end }}
+{{ else }}
+{{ $past = $past | append . }}
+{{ end }}
+{{ end }}
+
+{{/* Collect tags for each section */}}
+{{ $upcomingTags := slice }}
+{{ range $upcoming }}
+{{ range .Params.tags }}
+{{ $upcomingTags = $upcomingTags | append . }}
+{{ end }}
+{{ end }}
+{{ $upcomingTags = $upcomingTags | uniq }}
+
+{{ $pastTags := slice }}
+{{ range $past }}
+{{ range .Params.tags }}
+{{ $pastTags = $pastTags | append . }}
+{{ end }}
+{{ end }}
+{{ $pastTags = $pastTags | uniq }}
+
+<div class="row gx-5">
+    <div class="{{ if $showSidebar }}lg:col-8{{ else }}col-12{{ end }}">
+
+        {{/* Upcoming Elections Section */}}
+        {{ if gt (len $upcoming) 0 }}
+        <div class="mb-16">
+            <h2 class="h3 mb-8 border-b-2 border-primary pb-2">
+                <i class="fa-solid fa-calendar-check mr-2 text-primary"></i>
+                {{ T "upcoming_elections" | default "Upcoming Elections" }}
+            </h2>
+            <p class="mb-8 text-lg text-light">Candidates running in elections that haven't happened yet. Get informed
+                before you vote!</p>
+            <div class="row">
+                {{ range sort $upcoming "Params.election_date" }}
+                <div class="md:col-6 mb-14">
+                    {{ partial "components/candidate-card" . }}
+                </div>
+                {{ end }}
+            </div>
+        </div>
+        {{ else }}
+        <div class="mb-16 rounded-lg bg-theme-light p-8 dark:bg-darkmode-theme-light">
+            <h2 class="h3 mb-4">
+                <i class="fa-solid fa-calendar-check mr-2 text-primary"></i>
+                {{ T "upcoming_elections" | default "Upcoming Elections" }}
+            </h2>
+            <p class="text-lg">{{ T "no_upcoming_elections" | default "No upcoming elections at this time. Check back closer to your local election dates!" }}</p>
+        </div>
+        {{ end }}
+
+        {{/* Past Elections Section */}}
+        {{ if gt (len $past) 0 }}
+        <div class="mb-8">
+            <h2 class="h3 mb-8 border-b-2 border-gray-300 pb-2 dark:border-gray-600">
+                <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-500"></i>
+                {{ T "past_elections" | default "Past Elections" }}
+            </h2>
+            <p class="mb-8 text-lg text-light">Historical candidate profiles from previous elections.</p>
+            <div class="row">
+                {{ range sort $past "Params.election_date" "desc" }}
+                <div class="md:col-6 mb-14">
+                    {{ partial "components/candidate-card" . }}
+                </div>
+                {{ end }}
+            </div>
+        </div>
+        {{ end }}
+
+    </div>
+
+    {{/* Sidebar */}}
+    {{ if $showSidebar }}
+    <div class="lg:col-4">
+        {{ $widget := site.Params.widgets.sidebar }}
+        {{ if $widget }}
+        {{ partialCached "widgets/widget-wrapper" (dict "Widgets" $widget "Scope" $context) }}
+        {{ end }}
+    </div>
+    {{ end }}
+</div>

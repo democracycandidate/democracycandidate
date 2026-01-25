@@ -1,5 +1,5 @@
 ---
-enable: true
+enable: false
 title: "Give Voters a Search Result"
 description: "The goal of this project is to make it easier for pro-democracy candidates to tell voters about themselves.  It is an alternative to typical local race search results."
 
@@ -26,6 +26,6 @@ testimonials:
     content: "Oh wow, they have a whole platform! Ah, there's a party affiliation..."
 
 # don't create a separate page
-_build:
+build:
   render: "never"
 ---

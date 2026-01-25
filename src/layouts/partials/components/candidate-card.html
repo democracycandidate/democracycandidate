@@ -1,8 +1,9 @@
 <div class="bg-body dark:bg-darkmode-body">
   {{ $avatar:= .Params.avatar }}
   {{ if $avatar }}
-    {{ partial "image" (dict "Src" $avatar "Context" .Page "Alt" .Title "Class" "mb-6 w-full rounded") }}
+  {{ partial "image" (dict "Src" $avatar "Context" .Page "Alt" .Title "Class" "mb-6 w-full rounded") }}
   {{ end }}
+
   <h4 class="mb-3">
     <a href="{{ .RelPermalink }}">
       {{ .Title }}
@@ -10,19 +11,32 @@
   </h4>
   {{ $categories:= .Params.categories }}
   {{ if $categories }}
-    <ul class="mb-4">
-      <li class="mr-4 inline-block">
-        <i class="fa-regular fa-circle-user mr-2"></i>{{ .Params.candidate }}
-      </li>
-      {{ $party:= .Params.party }}
-      {{ if $party }}
-      <li class="mr-4 inline-block">
-        {{ partial "components/party-icon" (dict "Context" .Page "Party" $party) }}
-      </li>
+  <ul class="mb-4">
+    <li class="mr-4 inline-block">
+      <i class="fa-regular fa-circle-user mr-2"></i>{{ .Params.candidate }}
+    </li>
+    {{ $party:= .Params.party }}
+    {{ if $party }}
+    <li class="mr-4 inline-block">
+      {{ partial "components/party-icon" (dict "Context" .Page "Party" $party) }}
+    </li>
+    {{ end }}
+    {{ $today := now }}
+    {{ $electionDate := .Params.election_date }}
+    {{ if $electionDate }}
+    {{ $isUpcoming := ge (time $electionDate) $today }}
+    <li class="mr-4 inline-block">
+      {{ if $isUpcoming }}
+      <i class="fa-solid fa-calendar-check mr-2"></i>
+      {{ else }}
+      <i class="fa-solid fa-clock-rotate-left mr-2"></i>
       {{ end }}
-    </ul>
+      {{ time.Format ":date_long" $electionDate }}
+    </li>
+    {{ end }}
+  </ul>
   {{ end }}
-  <p class="mb-6">{{ .Params.about }}</p>
+  <p class="mb-6">{{ .Params.about | truncate 150 }}</p>
   <a class="btn btn-outline-primary btn-sm" href="{{ .RelPermalink }}">
     {{ T "read_more" }}
   </a>

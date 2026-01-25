@@ -12,9 +12,22 @@ url = "/about"
 weight = 2
 
 [[main]]
-name = "The Pledge"
-url = "/pledge"
+name = "Running?"
+url = "/running"
 weight = 3
+hasChildren = true
+
+[[main]]
+parent = "Running?"
+name = "Getting Started"
+url = "/running"
+weight = 1
+
+[[main]]
+parent = "Running?"
+name = "The Pledge"
+url = "/running/pledge"
+weight = 2
 
 [[main]]
 name = "Candidates"
@@ -28,11 +41,16 @@ url = "/about"
 weight = 1
 
 [[footer]]
+name = "The Pledge"
+url = "/pledge"
+weight = 2
+
+[[footer]]
 name = "Elements"
 url = "/elements"
-weight = 2
+weight = 3
 
 [[footer]]
 name = "Privacy Policy"
 url = "/privacy"
-weight = 3
+weight = 4

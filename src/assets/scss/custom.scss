@@ -1,1 +1,12 @@
 // Add your own custom styles here
+
+// Make navigation dropdown menu opaque to prevent overlap issues with page content
+.nav-dropdown-list {
+    @apply bg-white dark:bg-darkmode-body shadow-lg;
+    backdrop-filter: none;
+}
+
+// Add hover effect to dropdown links
+.nav-dropdown-link {
+    @apply hover:bg-gray-100 dark:hover:bg-darkmode-theme-light px-2 rounded transition-colors;
+}

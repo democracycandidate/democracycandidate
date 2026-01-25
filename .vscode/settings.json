@@ -1,0 +1,8 @@
+{
+    "[html]": {
+        "editor.formatOnSave": false,
+        "editor.defaultFormatter": null
+    },
+    "html.format.wrapLineLength": 0,
+    "html.format.wrapAttributes": "preserve-aligned"
+}

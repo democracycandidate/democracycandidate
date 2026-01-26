@@ -29,6 +29,11 @@ custom_script = ""
 # copyright
 # copyright = "Site design uses Hugoplate which is Designed & Developed by [Zeon Studio](https://zeon.studio)"
 
+# Turnstile (Cloudflare bot protection for forms)
+[turnstile]
+site_key = "0x4AAAAAACQu0meHoEJN4dXz"
+
+
 # Preloader
 # preloader module: https://github.com/gethugothemes/hugo-modules/tree/master/components/preloader
 [preloader]

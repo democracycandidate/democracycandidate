@@ -20,6 +20,10 @@ main {
   @apply bg-theme-light text-dark placeholder:text-light focus:border-primary dark:border-darkmode-border dark:bg-darkmode-theme-light dark:text-darkmode-light w-full rounded border-transparent px-6 py-4 focus:ring-transparent;
 }
 
+.form-select {
+  @apply bg-theme-light text-dark placeholder:text-light focus:border-primary dark:border-darkmode-border dark:bg-darkmode-theme-light dark:text-darkmode-light w-full rounded border-transparent px-6 py-4 focus:ring-transparent;
+}
+
 .form-label {
   @apply font-secondary text-dark dark:text-darkmode-light mb-4 block text-xl font-normal;
 }

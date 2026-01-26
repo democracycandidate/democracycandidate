@@ -9,7 +9,7 @@ env:
   PULUMI_STACK: prod
   PULUMI_ORG: zacdirect
   PULUMI_USER: user:zacdirect
-  PULUMI_TOKEN: urn:pulumi:token-type:access_token:personal
+  PULUMI_TOKEN_TYPE: urn:pulumi:token-type:access_token:personal
 
 permissions:
   id-token: write
@@ -43,7 +43,7 @@ jobs:
         with:
           stack-name: ${{ env.PULUMI_STACK }}
           organization: ${{ env.PULUMI_ORG }}
-          requested-token-type: ${{ env.PULUMI_TOKEN }}
+          requested-token-type: ${{ env.PULUMI_TOKEN_TYPE }}
           scope: ${{ env.PULUMI_USER }}
           command: preview
           work-dir: ./infra/compute
@@ -58,7 +58,7 @@ jobs:
         with:
           stack-name: ${{ env.PULUMI_STACK }}
           organization: ${{ env.PULUMI_ORG }}
-          requested-token-type: ${{ env.PULUMI_TOKEN }}
+          requested-token-type: ${{ env.PULUMI_TOKEN_TYPE }}
           scope: ${{ env.PULUMI_USER }}
           command: preview
           work-dir: ./infra/publishing
@@ -83,7 +83,7 @@ jobs:
         with:
           stack-name: ${{ env.PULUMI_STACK }}
           organization: ${{ env.PULUMI_ORG }}
-          requested-token-type: ${{ env.PULUMI_TOKEN }}
+          requested-token-type: ${{ env.PULUMI_TOKEN_TYPE }}
           scope: ${{ env.PULUMI_USER }}
           command: up
           work-dir: ./infra/compute
@@ -94,7 +94,7 @@ jobs:
         with:
           stack-name: ${{ env.PULUMI_STACK }}
           organization: ${{ env.PULUMI_ORG }}
-          requested-token-type: ${{ env.PULUMI_TOKEN }}
+          requested-token-type: ${{ env.PULUMI_TOKEN_TYPE }}
           scope: ${{ env.PULUMI_USER }}
           command: up
           work-dir: ./infra/publishing

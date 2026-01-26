@@ -27,5 +27,7 @@ Ready to create your profile? Here's what you need to do:
 1. **Review and sign the [pro-democracy pledge](/running/pledge)**
 2. **Prepare your candidate information** (bio, photo, positions, contact info)
 3. **Submit your profile** via our [GitHub repository](https://github.com/democracycandidate/democracycandidate)
+    * Please do not copy content from your other web presences.  This site is focused on providing good search results for interested voters.  Copying content can hurt the site's reputation and search engine optimization by making it appear to be an aggregator instead of a unique resource.
+    * Be sure to read the [contribution guidelines](https://github.com/democracycandidate/democracycandidate/blob/main/CONTRIBUTING.md)
 
-Questions? Check out our [About page](/about) or view [current candidate profiles](/candidates) for examples.
+Questions? Check out our [About page](/about), view [current candidate profiles](/candidates) for examples, or open an issue on our [GitHub repository](https://github.com/democracycandidate/democracycandidate/issues) to ask questions.

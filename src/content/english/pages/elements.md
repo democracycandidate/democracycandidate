@@ -1,10 +1,7 @@
 ---
 title: "Elements"
-# meta title
 meta_title: "Elements of design"
-# meta description
 description: "How elements that you can use in your posts will look"
-# save as draft
 draft: false
 ---
 

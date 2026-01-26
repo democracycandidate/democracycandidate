@@ -1,0 +1,10 @@
+name: democracycandidate
+description: Provisions infra for Democracy candidate static website
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+    nodeargs: --max-old-space-size=4096
+config:
+  azure-native:location: CentralUS
+  democracycandidate:appName: democracycandidate

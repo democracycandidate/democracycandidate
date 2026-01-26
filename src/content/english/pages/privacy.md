@@ -1,10 +1,7 @@
 ---
 title: "Privacy"
-# meta title
 meta_title: "Privacy Policy"
-# meta description
 description: "There are basic usage trackers on this site for analytics"
-# save as draft
 draft: false
 ---
 

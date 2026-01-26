@@ -1,4 +1,5 @@
 name: Pulumi Steps
+description: Authenticate with Pulumi and run infrastructure commands
 
 inputs:
   command:
@@ -20,8 +21,11 @@ inputs:
     default: ./infra
 outputs:
   storageAccountName:
-    description: "Name of the provisioned storage account"
+    description: "Name of the provisioned storage account (publishing)"
     value: ${{ steps.pulumi.outputs.storageAccountName }}
+  functionAppName:
+    description: "Name of the Azure Function App (compute)"
+    value: ${{ steps.pulumi.outputs.functionAppName }}
 
 runs:
   using: "composite"
@@ -37,7 +41,7 @@ runs:
     - name: Setup Node for Pulumi
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22
 
     - name: Install for Pulumi
       working-directory: ${{ inputs.work-dir }}

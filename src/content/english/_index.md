@@ -1,5 +1,4 @@
 ---
-# Voters
 voters:
   title: "Are you a voter?"
   content: "This site does not endorse or take money from candidates.  Listings here guarantee two things:"
@@ -15,7 +14,6 @@ voters:
       label: "See Candidates"
       link: "/candidates"
 
-# Candidates
 candidates:
   - title: "Are you a pro-democracy candidate?"
     content: "Make a post here telling voters about you and what you're running for."

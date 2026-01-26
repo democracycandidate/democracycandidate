@@ -1,0 +1,11 @@
+{
+    "name": "democracycandidate-compute",
+    "devDependencies": {
+        "@types/node": "^22",
+        "typescript": "^5.7.0"
+    },
+    "dependencies": {
+        "@pulumi/azure-native": "^3.12.1",
+        "@pulumi/pulumi": "^3.217.0"
+    }
+}

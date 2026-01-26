@@ -125,13 +125,10 @@ jobs:
 
       - name: Deploy Function
         if: ${{ needs.infra-compute.result == 'success' }}
-        uses: azure/CLI@v2
-        env:
-          FUNCTION_APP_NAME: ${{ steps.pulumi-compute.outputs.functionAppName }}
+        uses: Azure/functions-action@v1
         with:
-          inlineScript: |
-            cd $GITHUB_WORKSPACE/infra/compute/function
-            func azure functionapp publish $FUNCTION_APP_NAME --javascript
+          app-name: ${{ steps.pulumi-compute.outputs.functionAppName }}
+          package: ./infra/compute/function
 
       # Build and Deploy Static Site
       - name: Setup Hugo

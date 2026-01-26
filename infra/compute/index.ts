@@ -39,7 +39,7 @@ const contactStorage = new azure.storage.StorageAccount(`${shortPrefix}contacts`
     },
     enableHttpsTrafficOnly: true,
     allowBlobPublicAccess: false,
-    minimumTlsVersion: azure.storage.MinimumTlsVersion.TLS1_3,
+    minimumTlsVersion: azure.storage.MinimumTlsVersion.TLS1_2,
     accessTier: azure.storage.AccessTier.Cool, // Low-cost tier for infrequent access
 });
 

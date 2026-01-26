@@ -1,0 +1,2 @@
+environment:
+ - core-infrastructure/democracycandidate #provisioned dynamically by core-infrastructure project

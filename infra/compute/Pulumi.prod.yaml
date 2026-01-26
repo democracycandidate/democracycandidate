@@ -1,0 +1,5 @@
+environment:
+ - core-infrastructure/democracycandidate #provisioned dynamically by core-infrastructure project
+ - democracycandidate/candidateform
+config:
+  resourceGroupName: zacdirect-prod-rg1e0defb9

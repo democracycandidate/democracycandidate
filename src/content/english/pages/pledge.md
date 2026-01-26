@@ -1,10 +1,7 @@
 ---
 title: "The Pledge"
-# meta title
 meta_title: "Pro-Democracy Pledge"
-# meta description
 description: "The pro-democracy pledge that all candidates must sign before being listed here."
-# save as draft
 draft: false
 ---
 

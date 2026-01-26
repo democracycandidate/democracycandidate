@@ -1,0 +1,10 @@
+name: democracycandidate-compute
+description: Azure Function infrastructure for candidate form submissions
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+    nodeargs: --max-old-space-size=4096
+config:
+  azure-native:location: CentralUS
+  democracycandidate-compute:appName: democracycandidate

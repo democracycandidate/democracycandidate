@@ -74,7 +74,7 @@ meta_title: "${submission.candidate} for ${submission.title}"
 description: "${submission.candidate} for ${submission.title}"
 candidate: "${submission.candidate}"
 party: "${submission.party}"
-election_date: ${submission.election_date}T12:00:00Z
+election_date: ${submission.electionDate}T12:00:00Z
 image: "${imageFilename ? `/${imageFilename}` : ""}"
 categories: ${JSON.stringify(submission.categories)}
 tags: ${JSON.stringify(submission.tags)}
@@ -262,6 +262,8 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
             contactEmail: submission.contactEmail,
             contactPhone: submission.contactPhone,
             contactNotes: submission.contactNotes,
+            submitterName: submission.submitterName,
+            submitterRelationship: submission.submitterRelationship,
             candidateName: submission.candidate,
             status: "pending",
         };

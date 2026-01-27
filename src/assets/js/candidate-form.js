@@ -68,13 +68,80 @@ if (aboutField && aboutCount) {
 }
 
 // Enable submit button when pledge is checked
-const pledgeCheckbox = document.getElementById('pledge-checkbox');
-const submitBtn = document.getElementById('submit-btn');
-if (pledgeCheckbox && submitBtn) {
-    pledgeCheckbox.addEventListener('change', () => {
-        submitBtn.disabled = !pledgeCheckbox.checked;
+// Validation Summary Logic
+const validationSummary = document.getElementById('validation-summary');
+const validationList = document.getElementById('validation-list');
+
+const showErrorSummary = (errors) => {
+    if (!validationSummary || !validationList) return;
+
+    validationList.innerHTML = errors.map(err => `<li>${err}</li>`).join('');
+    validationSummary.classList.remove('hidden');
+
+    // Scroll to summary
+    validationSummary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+const hideErrorSummary = () => {
+    if (validationSummary) validationSummary.classList.add('hidden');
+};
+
+// Validate Form Function
+const validateForm = () => {
+    const errors = [];
+
+    // 1. Pledge Check
+    const pledgeCheckbox = document.getElementById('pledge-checkbox');
+    if (pledgeCheckbox && !pledgeCheckbox.checked) {
+        errors.push("You must agree to the pro-democracy pledge.");
+    }
+
+    // 2. Required Fields check (Basic HTML5 validation check)
+    const requiredInputs = document.querySelectorAll('input[required], select[required], textarea[required]');
+    requiredInputs.forEach(input => {
+        if (!input.checkValidity()) {
+            // Get label text for better error message
+            const label = document.querySelector(`label[for="${input.id}"]`);
+            const fieldName = label ? label.innerText.replace('*', '').trim() : input.name || input.id;
+            errors.push(`${fieldName} is required.`);
+        }
     });
-}
+
+    // 3. Custom Validations
+
+    // Email Regex
+    const emailInput = document.getElementById('contact-email');
+    if (emailInput && emailInput.value) {
+        if (!/^[a-zA-Z0-9].*@.*\..+$/.test(emailInput.value.trim())) {
+            // Avoid duplicate if it's trapped by required check, but required only checks empty
+            // logic: if value exists but invalid format
+            errors.push("Please enter a valid email address.");
+        }
+    }
+
+    // Tags
+    if (currentTags.length === 0) {
+        errors.push("Please add at least one location tag.");
+    }
+
+    // Images (Check generated data fields)
+    const avatarData = document.getElementById('avatar-data');
+    if (avatarData && !avatarData.value) {
+        // This might be caught by required on file input if users haven't selected anything, 
+        // but let's be safe as file input value might be cleared if invalid.
+        // Actually, the file input has 'required', so standard check catches it.
+        // But let's double check if we cleared it programmatically.
+        const avatarInput = document.getElementById('avatar-upload');
+        if (avatarInput && !avatarInput.value) {
+            // Already caught by required loop above if logic holds
+        } else if (!avatarData.value) {
+            errors.push("Main Photo must be a valid image under 5MB.");
+        }
+    }
+
+    return errors;
+};
+
 
 // Image upload handlers
 function handleImageUpload(inputId, dataId, previewId, options = {}) {
@@ -183,6 +250,123 @@ function handleImageUpload(inputId, dataId, previewId, options = {}) {
 handleImageUpload('avatar-upload', 'avatar-data', 'avatar-preview', { requireSquare: true, errorId: 'avatar-error', extraPreviewId: 'preview-image' });
 handleImageUpload('title-upload', 'title-data', 'title-preview', { requireWide: true, errorId: 'title-error' });
 
+// Initialize Phone Input
+const phoneInputField = document.getElementById("contact-phone");
+const phoneError = document.getElementById("phone-error");
+let phoneInput = null;
+
+if (phoneInputField) {
+    phoneInput = window.intlTelInput(phoneInputField, {
+        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/25.10.1/build/js/utils.min.js",
+        initialCountry: "us",
+        separateDialCode: true,
+        nationalMode: true,
+    });
+
+    const resetPhoneError = () => {
+        if (phoneError) {
+            phoneError.classList.add('hidden');
+            phoneError.textContent = '';
+        }
+        phoneInputField.classList.remove("!border-red-600");
+    };
+
+    const validatePhone = () => {
+        resetPhoneError();
+        const value = phoneInputField.value.trim();
+        if (value) {
+            // 1. Attempt to get number from library
+            let currentNumber = phoneInput.getNumber();
+
+            // 2. Fallback for US numbers if library returns empty (due to validation strictness or other issues)
+            // This ensures 10-digit inputs are always formatted
+            if (!currentNumber && phoneInput.getSelectedCountryData().iso2 === 'us') {
+                const raw = value.replace(/\D/g, '');
+                if (raw.length === 10) {
+                    currentNumber = '+1' + raw;
+                    // Manual visual formatting
+                    const formatted = `(${raw.substring(0, 3)}) ${raw.substring(3, 6)}-${raw.substring(6, 10)}`;
+                    phoneInputField.value = formatted;
+                    // We consider this valid for our purposes if it was 10 digits
+                    return true;
+                }
+            }
+
+            // 3. Apply format if we have a valid E.164 string (and didn't manually format above)
+            if (currentNumber && phoneInput.getSelectedCountryData().iso2 !== 'us') {
+                phoneInput.setNumber(currentNumber);
+            }
+
+            // 4. Validate (allow empty as it is optional, but if value exists check validity)
+            // We re-fetch validity after setNumber which might have fixed things
+            if (!phoneInput.isValidNumber()) {
+                // If we manually formatted a US number, we trust it. 
+                // We check if value looks like our manual format
+                if (phoneInput.getSelectedCountryData().iso2 === 'us') {
+                    const raw = phoneInputField.value.replace(/\D/g, '');
+                    if (raw.length === 10) return true;
+                }
+
+                const errorCode = phoneInput.getValidationError();
+                let msg = "Invalid phone number format";
+                // Basic error mapping
+                switch (errorCode) {
+                    case 1: msg = "Invalid country code"; break;
+                    case 2: msg = "Phone number is too short"; break;
+                    case 3: msg = "Phone number is too long"; break;
+                    case 4: msg = "Invalid phone number"; break;
+                }
+
+                if (phoneError) {
+                    phoneError.textContent = msg;
+                    phoneError.classList.remove('hidden');
+                }
+                phoneInputField.classList.add("!border-red-600");
+                return false;
+            }
+        }
+        return true;
+    };
+
+    phoneInputField.addEventListener('blur', validatePhone);
+    phoneInputField.addEventListener('input', resetPhoneError);
+}
+
+// Email Validation
+const emailInput = document.getElementById('contact-email');
+const emailError = document.getElementById('email-error');
+
+if (emailInput) {
+    const validateEmail = () => {
+        const value = emailInput.value.trim();
+        // Regex: At least one alphanumeric char at start, contains @, contains . after @
+        // This is a "honest mistake" checker, not an RFC 5322 validator
+        const valid = /^[a-zA-Z0-9].*@.*\..+$/.test(value);
+
+        if (value && !valid) {
+            if (emailError) {
+                emailError.textContent = "Please enter a valid email address (e.g. name@example.com)";
+                emailError.classList.remove('hidden');
+            }
+            emailInput.classList.add("!border-red-600");
+            return false;
+        } else {
+            if (emailError) {
+                emailError.classList.add('hidden');
+                emailError.textContent = '';
+            }
+            emailInput.classList.remove("!border-red-600");
+            return true;
+        }
+    };
+
+    emailInput.addEventListener('blur', validateEmail);
+    emailInput.addEventListener('input', () => {
+        // Clear error on input but don't validate until blur (less annoying)
+        if (emailError) emailError.classList.add('hidden');
+        emailInput.classList.remove("!border-red-600");
+    });
+}
 // Tag Manager Logic
 const tagEntry = document.getElementById('tag-entry');
 const tagsList = document.getElementById('tags-list');
@@ -193,11 +377,11 @@ function renderTags() {
     tagsList.innerHTML = '';
     currentTags.forEach((tag, index) => {
         const tagEl = document.createElement('div');
-        tagEl.className = 'bg-primary/10 text-primary rounded text-sm flex items-center group border border-transparent hover:border-primary/30 transition-colors overflow-hidden';
+        tagEl.className = 'bg-primary/10 text-primary dark:bg-blue-900/40 dark:text-blue-400 rounded text-sm flex items-center group border border-transparent hover:border-primary/30 dark:hover:border-blue-500 transition-colors overflow-hidden';
         tagEl.innerHTML = `
-      <span class="cursor-pointer px-2 py-1 hover:bg-primary/5 transition-colors" onclick="editTag(${index})" title="Click to edit">${tag}</span>
-      <span class="text-primary/20 select-none py-0.5">|</span>
-      <button type="button" class="text-primary/50 hover:text-red-500 hover:bg-red-500/10 focus:outline-none px-2 py-1 transition-colors" onclick="removeTag(${index})" title="Remove tag">
+      <span class="cursor-pointer px-2 py-1 hover:bg-primary/5 dark:hover:bg-white/5 transition-colors" onclick="editTag(${index})" title="Click to edit">${tag}</span>
+      <span class="text-primary/20 dark:text-blue-400/30 select-none py-0.5">|</span>
+      <button type="button" class="text-primary/50 dark:text-blue-400/60 hover:text-red-500 hover:bg-red-500/10 focus:outline-none px-2 py-1 transition-colors" onclick="removeTag(${index})" title="Remove tag">
         &times;
       </button>
     `;
@@ -256,6 +440,16 @@ if (form) {
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        // 1. Validate Form
+        const errors = validateForm();
+        if (errors.length > 0) {
+            showErrorSummary(errors);
+            return;
+        }
+
+        // Hide validation summary if valid
+        hideErrorSummary();
+
         // Disable submit button and show spinner
         if (submitBtn) submitBtn.disabled = true;
         const submitText = document.getElementById('submit-text');
@@ -271,6 +465,11 @@ if (form) {
             // Get Turnstile token
             const turnstileToken = turnstile.getResponse();
             if (!turnstileToken) {
+                // If token expired or not completed, treat as form error?
+                // Or just throw to catch block. 
+                // Let's add it to validation summary context if we want, or just let the catch handle it.
+                // The catch block puts it in 'error-text' div, which is different from validation summary.
+                // To be consistent, maybe just throw here and let the catch block handle server/system errors.
                 throw new Error('Please complete the security check');
             }
 
@@ -281,16 +480,16 @@ if (form) {
 
             // Build tags array
             const tags = currentTags;
-            if (tags.length === 0) {
-                throw new Error('Please add at least one location tag');
-            }
+            // Tag validation is already done in validateForm(), so we proceed.
+
+            // Email regex validation is already done in validateForm(), so we proceed.
 
             // Build payload
             const payload = {
                 candidate: document.getElementById('candidate-name').value,
                 title: document.getElementById('position-title').value,
                 party: document.getElementById('party').value,
-                election_date: document.getElementById('election-date').value,
+                electionDate: document.getElementById('election-date').value,
                 categories: categories,
                 tags: tags,
                 about: document.getElementById('about').value,
@@ -298,8 +497,22 @@ if (form) {
                 avatarImage: document.getElementById('avatar-data').value,
                 titleImage: document.getElementById('title-data').value || undefined,
                 contactEmail: document.getElementById('contact-email').value,
-                contactPhone: document.getElementById('contact-phone').value || undefined,
+                contactPhone: (() => {
+                    if (phoneInput && phoneInput.isValidNumber()) {
+                        return phoneInput.getNumber();
+                    }
+                    // Fallback manual parsing for US numbers
+                    const rawVal = document.getElementById("contact-phone").value || "";
+                    const country = phoneInput ? phoneInput.getSelectedCountryData().iso2 : "";
+                    if (country === 'us') {
+                        const digits = rawVal.replace(/\D/g, '');
+                        if (digits.length === 10) return "+1" + digits;
+                    }
+                    return rawVal || undefined;
+                })(),
                 contactNotes: document.getElementById('contact-notes').value || undefined,
+                submitterName: document.getElementById('submitter-name').value || undefined,
+                submitterRelationship: document.getElementById('submitter-relationship').value || undefined,
                 turnstileToken: turnstileToken
             };
 

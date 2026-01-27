@@ -8,7 +8,7 @@ export interface CandidateSubmission {
     title: string;           // Office/position title
     candidate: string;       // Candidate name
     party: string;           // Party affiliation
-    election_date: string;   // ISO date (YYYY-MM-DD)
+    electionDate: string;   // ISO date (YYYY-MM-DD)
     categories: string[];    // ["School Board", "Illinois"]
     tags: string[];          // ["Lake Park", "High School"]
     about: string;           // Short bio for card display
@@ -24,6 +24,8 @@ export interface CandidateSubmission {
     contactEmail: string;
     contactPhone?: string;
     contactNotes?: string;   // Any additional contact context
+    submitterName?: string;
+    submitterRelationship?: string;
 
     // Security
     turnstileToken: string;  // Cloudflare Turnstile response token
@@ -45,6 +47,8 @@ export interface ContactRecord {
     contactEmail: string;
     contactPhone?: string;
     contactNotes?: string;
+    submitterName?: string;
+    submitterRelationship?: string;
     candidateName: string;
     pullRequestUrl?: string;
     status: 'pending' | 'pr_created' | 'pr_merged' | 'rejected';

@@ -1,5 +1,6 @@
 {{ define "main" }}
-  <section class="section">
+  {{ partial "page-header" . }}
+  <section class="section-compact">
     <div class="container">
       <div class="row justify-center">
         <div class="md:col-10 lg:col-8">
@@ -202,16 +203,6 @@
             </div>
 
             <div class="md:col-6 col-12">
-              <label for="submitter-name" class="form-label">Your Name (Optional)</label>
-              <input type="text" id="submitter-name" class="form-input" placeholder="If different from candidate">
-            </div>
-
-            <div class="md:col-6 col-12">
-              <label for="submitter-relationship" class="form-label">Relationship (Optional)</label>
-              <input type="text" id="submitter-relationship" class="form-input" placeholder="e.g. Campaign Manager, Spouse">
-            </div>
-
-            <div class="md:col-6 col-12">
               <label for="contact-email" class="form-label">Email Address <span class="text-red-600">*</span></label>
               <input type="email" id="contact-email" class="form-input" required>
               <p id="email-error" class="hidden text-red-600 text-sm mt-1 font-medium"></p>
@@ -221,6 +212,16 @@
               <label for="contact-phone" class="form-label">Phone Number (Optional)</label>
               <input type="tel" id="contact-phone" class="form-input">
               <p id="phone-error" class="hidden text-red-600 text-sm mt-1 font-medium"></p>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="submitter-name" class="form-label">Your Name (Optional)</label>
+              <input type="text" id="submitter-name" class="form-input" placeholder="If different from candidate">
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="submitter-relationship" class="form-label">Relationship (Optional)</label>
+              <input type="text" id="submitter-relationship" class="form-input" placeholder="e.g. Campaign Manager, Spouse">
             </div>
 
             <div class="col-12">

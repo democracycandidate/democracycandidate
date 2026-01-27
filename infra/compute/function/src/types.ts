@@ -16,9 +16,15 @@ export interface CandidateSubmission {
     // Markdown body content
     content: string;         // Full markdown content (Policy, Experience, etc.)
 
-    // Images (base64 encoded with data URI prefix)
+    // Images (base64 encoded with data URI prefix or raw base64)
     titleImage?: string;     // Main/hero image
     avatarImage?: string;    // Profile photo
+
+    // Inline images from markdown
+    additionalImages?: Array<{
+        path: string;       // Relative path (e.g., "images/img-xyz.jpg")
+        content: string;    // Base64 content (without prefix)
+    }>;
 
     // Private contact info (stored in blob, NOT in PR)
     contactEmail: string;

@@ -1,14 +1,126 @@
-// Initialize EasyMDE
+// Custom Image Manager for inline EasyMDE support
+const ImageManager = {
+    // Map shortId -> { blobUrl, base64, filename }
+    store: new Map(),
+
+    // Generate random short ID
+    generateId: () => 'img-' + Math.random().toString(36).substr(2, 9),
+
+    // Add image to store and return short ID
+    add: (file, blobUrl, base64) => {
+        const id = ImageManager.generateId();
+        // slugify filename roughly
+        const safeName = file.name.replace(/[^a-zA-Z0-9.]/g, '-').toLowerCase();
+        ImageManager.store.set(id, {
+            blobUrl,
+            base64,
+            filename: `images/${id}-${safeName}`
+        });
+        return id;
+    },
+
+    // Process file: resize -> compress -> store
+    process: async (file) => {
+        if (!file.type.startsWith('image/')) throw new Error('Not an image file');
+        if (file.size > 10 * 1024 * 1024) throw new Error('Image too large (max 10MB)');
+
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Max dimensions
+                    const MAX_WIDTH = 1000;
+                    const MAX_HEIGHT = 1000;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Compress to JPEG 80%
+                    const base64 = canvas.toDataURL('image/jpeg', 0.8);
+
+                    // Create Blob for local preview URL (better performance than base64 in src)
+                    canvas.toBlob((blob) => {
+                        const blobUrl = URL.createObjectURL(blob);
+                        const id = ImageManager.add(file, blobUrl, base64);
+                        resolve({ id, filename: file.name });
+                    }, 'image/jpeg', 0.8);
+                };
+                img.onerror = reject;
+                img.src = e.target.result;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+};
+
+// Initialize EasyMDE with custom image handling
 const easyMDE = new EasyMDE({
     element: document.getElementById('content-editor'),
-    placeholder: 'Write your biography here...',
+    placeholder: 'Write your biography here... (Drag & Drop images supported!)',
     spellChecker: true,
     autosave: {
         enabled: true,
         uniqueId: 'candidate-submission',
         delay: 5000,
     },
-    toolbar: ['bold', 'italic', 'heading', '|', 'unordered-list', 'ordered-list', '|', 'link', 'preview', 'side-by-side', 'fullscreen', 'guide'],
+    // Prevent side-by-side from taking over full window
+    sideBySideFullscreen: false,
+
+    // Custom renderer to resolve image:id to blob:url for preview
+    previewRender: (plainText) => {
+        // PRE-PROCESS: Replace image:id with blob:url for preview
+        const imageRegex = /!\[(.*?)\]\(image:([a-z0-9-]+)\)/g;
+        const processedText = plainText.replace(imageRegex, (match, alt, id) => {
+            const imgData = ImageManager.store.get(id);
+            if (imgData) {
+                return `![${alt}](${imgData.blobUrl})`;
+            }
+            return match; // Keep original if not found
+        });
+
+        // If marked is not available (e.g. error loading), fallback to plain text
+        if (typeof marked === 'undefined') {
+            return processedText;
+        }
+
+        return marked.parse(processedText);
+    },
+
+    toolbar: [
+        'bold', 'italic', 'heading', '|',
+        'quote', 'unordered-list', 'ordered-list', '|',
+        'link',
+        {
+            name: "image-upload",
+            action: (editor) => {
+                document.getElementById('hidden-image-input').click();
+            },
+            className: "fa fa-picture-o",
+            title: "Upload Image",
+        },
+        '|',
+        'preview', 'side-by-side', 'fullscreen', '|', 'guide'
+    ],
     initialValue: `### Policy
 
 [Describe your policy positions and what you stand for]
@@ -17,10 +129,76 @@ const easyMDE = new EasyMDE({
 
 [Share your relevant experience and qualifications]
 
-### Collaboration
+### Endorsements
 
 [Explain how you work with others and build consensus]`
 });
+
+// Hidden file input for toolbar button
+const fileInput = document.createElement('input');
+fileInput.type = 'file';
+fileInput.id = 'hidden-image-input';
+fileInput.accept = 'image/*';
+fileInput.style.display = 'none';
+document.body.appendChild(fileInput);
+
+fileInput.addEventListener('change', async (e) => {
+    if (e.target.files && e.target.files[0]) {
+        try {
+            const { id } = await ImageManager.process(e.target.files[0]);
+            const cm = easyMDE.codemirror;
+            const doc = cm.getDoc();
+            const cursor = doc.getCursor();
+            doc.replaceRange(`![Image](image:${id})`, cursor);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to upload image: ' + err.message);
+        }
+        // Clear value so same file can be selected again
+        fileInput.value = '';
+    }
+});
+
+// Drag & Drop + Paste Handlers
+const cm = easyMDE.codemirror;
+
+cm.on('drop', async (cm, e) => {
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0 && files[0].type.startsWith('image/')) {
+        e.preventDefault();
+        const { id } = await ImageManager.process(files[0]);
+        // Insert at drop position (handled by codemirror via coords if complex, 
+        // but simpler to just insert at cursor or prevent default drop behavior and insert manually)
+        // Actually, CodeMirror's default drop might try to insert the file path or just text.
+        // We want to insert the markdown.
+
+        // Calculate position from mouse coords
+        const coords = cm.coordsChar({ left: e.pageX, top: e.pageY });
+        cm.getDoc().replaceRange(`![Image](image:${id})`, coords);
+    }
+});
+
+cm.on('paste', async (cm, e) => {
+    const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+    for (const item of items) {
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+            e.preventDefault();
+            const file = item.getAsFile();
+            const { id } = await ImageManager.process(file);
+            const doc = cm.getDoc();
+            doc.replaceRange(`![Image](image:${id})`, doc.getCursor());
+            return; // Handle one image per paste for now
+        }
+    }
+});
+
+// Default to side-by-side view for better user experience
+// Use setTimeout to ensure DOM is ready and layout is calculated
+setTimeout(() => {
+    if (!easyMDE.isSideBySideActive()) {
+        easyMDE.toggleSideBySide();
+    }
+}, 200);
 
 // Character counter for about field
 const aboutField = document.getElementById('about');
@@ -485,6 +663,43 @@ if (form) {
             // Email regex validation is already done in validateForm(), so we proceed.
 
             // Build payload
+            // Build payload
+
+            // 1. Process Markdown Content for Images
+            let finalContent = easyMDE.value();
+            const additionalImages = [];
+
+            // Regex to find ![alt](image:shortId)
+            const imageRegex = /!\[(.*?)\]\(image:([a-z0-9-]+)\)/g;
+            let match;
+
+            // We need to replace synchronously or careful with regex loop
+            // Let's iterate and build replacements first
+            const replacements = [];
+            while ((match = imageRegex.exec(finalContent)) !== null) {
+                const [fullMatch, altText, id] = match;
+                const imgData = ImageManager.store.get(id);
+
+                if (imgData) {
+                    // Use the safe filename we generated earlier
+                    const targetPath = imgData.filename;
+                    replacements.push({
+                        fullMatch,
+                        newText: `![${altText}](${targetPath})`,
+                        imageData: {
+                            path: targetPath, // e.g. "images/img-xyz-photo.jpg". Backend handles placement relative to candidate folder.
+                            content: imgData.base64.split(',')[1] // Remove data:image/jpeg;base64, prefix
+                        }
+                    });
+                }
+            }
+
+            // Apply replacements
+            replacements.forEach(rep => {
+                finalContent = finalContent.replace(rep.fullMatch, rep.newText);
+                additionalImages.push(rep.imageData);
+            });
+
             const payload = {
                 candidate: document.getElementById('candidate-name').value,
                 title: document.getElementById('position-title').value,
@@ -493,7 +708,8 @@ if (form) {
                 categories: categories,
                 tags: tags,
                 about: document.getElementById('about').value,
-                content: easyMDE.value(),
+                content: finalContent,
+                additionalImages: additionalImages,
                 avatarImage: document.getElementById('avatar-data').value,
                 titleImage: document.getElementById('title-data').value || undefined,
                 contactEmail: document.getElementById('contact-email').value,

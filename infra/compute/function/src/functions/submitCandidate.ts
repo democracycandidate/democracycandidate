@@ -147,6 +147,16 @@ async function createCandidatePR(
         });
     }
 
+    // Process inline images
+    if (submission.additionalImages && submission.additionalImages.length > 0) {
+        submission.additionalImages.forEach(img => {
+            files.push({
+                path: `${candidatePath}/${img.path}`,
+                content: img.content, // Already base64 stripped by frontend
+            });
+        });
+    }
+
     // Generate and add index.md
     const frontmatter = generateFrontmatter(submission, avatarFilename, imageFilename);
     files.push({

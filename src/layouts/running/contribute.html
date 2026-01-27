@@ -3,7 +3,7 @@
   <section class="section-compact">
     <div class="container">
       <div class="row justify-center">
-        <div class="md:col-10 lg:col-8">
+        <div class="md:col-10 lg:col-10">
           
           <!-- Instructions -->
           {{ .Page.RenderString "{{< contribution-requirements >}}" | safeHTML }}
@@ -33,8 +33,8 @@
 
             <div class="md:col-6 col-12">
               <label for="position-title" class="form-label">Office/Position Title <span class="text-red-600">*</span></label>
-              <input type="text" id="position-title" class="form-input" placeholder="e.g., School Board Member" required>
-              <small class="form-text">The position you're running for</small>
+              <input type="text" id="position-title" class="form-input" placeholder="Gravity Falls School Board 6" required>
+              <small class="form-text">The candidates list is alphabetized by this field, it is recommended to use the specific name instead of a generic position like "School Board"</small>
             </div>
 
             <div class="md:col-6 col-12">
@@ -192,7 +192,7 @@
 
             <div class="col-12">
               <label for="content-editor" class="form-label">Full Biography <span class="text-red-600">*</span></label>
-              <small class="form-text mb-2 block">Use the editor below to write your full biography. Include sections like Policy, Experience, Collaboration, etc.</small>
+              <small class="form-text mb-2 block">This is the middle of your candidate page.  The 'About' section you filled out above will show at the top of your page.  To see how it all goes together review <a href="/candidates/" target="_blank" class="text-primary dark:text-blue-400 hover:underline">any candidate's page here</a></small>
               <textarea id="content-editor"></textarea>
             </div>
 
@@ -269,6 +269,9 @@
       </div>
     </div>
   </section>
+
+  <!-- Include marked for custom rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
   <!-- Include EasyMDE CSS and JS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@latest/dist/easymde.min.css">

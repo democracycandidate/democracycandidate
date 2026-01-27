@@ -63,6 +63,51 @@ async function getOctokit(): Promise<Octokit> {
 }
 
 /**
+ * Normalize filename: lowercase, replace spaces/special chars with dashes
+ */
+function normalizeFilename(filename: string): string {
+    // Extract extension
+    const lastDot = filename.lastIndexOf('.');
+    const name = lastDot > 0 ? filename.substring(0, lastDot) : filename;
+    const ext = lastDot > 0 ? filename.substring(lastDot) : '';
+    
+    // Normalize name: lowercase, replace non-alphanumeric with dashes, remove duplicate dashes
+    const normalized = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
+    
+    return normalized + ext.toLowerCase();
+}
+
+/**
+ * Update markdown content to use normalized image paths
+ */
+function normalizeMarkdownImagePaths(content: string, imageMap: Map<string, string>): string {
+    let updated = content;
+    
+    // Replace image references: ![alt](oldpath) -> ![alt](normalizedpath)
+    imageMap.forEach((normalizedPath, originalPath) => {
+        // Match various markdown image syntaxes
+        const patterns = [
+            new RegExp(`!\\[([^\\]]*)\\]\\(${escapeRegex(originalPath)}\\)`, 'g'),
+            new RegExp(`!\\[([^\\]]*)\\]\\(\\.\\/\\.\\.\\/\\.\\.\\/assets\\/images\\/${escapeRegex(originalPath)}\\)`, 'g'),
+            new RegExp(`!\\[([^\\]]*)\\]\\(images\\/${escapeRegex(originalPath)}\\)`, 'g'),
+        ];
+        
+        patterns.forEach(pattern => {
+            updated = updated.replace(pattern, `![$1](${normalizedPath})`);
+        });
+    });
+    
+    return updated;
+}
+
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Generate Hugo frontmatter from submission
  */
 function generateFrontmatter(submission: CandidateSubmission, avatarFilename?: string, imageFilename?: string): string {
@@ -75,7 +120,7 @@ description: "${submission.candidate} for ${submission.title}"
 candidate: "${submission.candidate}"
 party: "${submission.party}"
 election_date: ${submission.electionDate}T12:00:00Z
-image: "${imageFilename ? `/${imageFilename}` : ""}"
+image: "${imageFilename || ""}"
 categories: ${JSON.stringify(submission.categories)}
 tags: ${JSON.stringify(submission.tags)}
 draft: true
@@ -98,7 +143,10 @@ async function createCandidatePR(
 ): Promise<string> {
     const slug = submission.candidate.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     const branchName = `form-${slug}-${correlationId.slice(0, 8)}`;
-    const candidatePath = `src/content/english/candidates/${slug}`;
+    
+    // Extract year from election date for folder structure
+    const year = submission.electionDate.split('-')[0];
+    const candidatePath = `src/content/english/candidates/${year}/${slug}`;
 
     // Get default branch SHA from main repo
     const { data: mainRepo } = await octokit.repos.get({
@@ -124,11 +172,12 @@ async function createCandidatePR(
 
     // Prepare files to commit
     const files: Array<{ path: string; content: string }> = [];
+    const imageMap = new Map<string, string>(); // Track original -> normalized paths for markdown updates
 
     // Process avatar image
     let avatarFilename: string | undefined;
     if (submission.avatarImage) {
-        avatarFilename = `${slug}-avatar.jpg`;
+        avatarFilename = normalizeFilename(`${slug}-avatar.jpg`);
         const base64Data = submission.avatarImage.replace(/^data:image\/\w+;base64,/, "");
         files.push({
             path: `${candidatePath}/${avatarFilename}`,
@@ -139,7 +188,7 @@ async function createCandidatePR(
     // Process title image
     let imageFilename: string | undefined;
     if (submission.titleImage) {
-        imageFilename = `${slug}-title.jpg`;
+        imageFilename = normalizeFilename(`${slug}-title.jpg`);
         const base64Data = submission.titleImage.replace(/^data:image\/\w+;base64,/, "");
         files.push({
             path: `${candidatePath}/${imageFilename}`,
@@ -147,18 +196,33 @@ async function createCandidatePR(
         });
     }
 
-    // Process inline images
+    // Process inline images with normalization
     if (submission.additionalImages && submission.additionalImages.length > 0) {
         submission.additionalImages.forEach(img => {
+            // Extract just the filename from the path
+            const originalFilename = img.path.split('/').pop() || img.path;
+            const normalizedFilename = normalizeFilename(originalFilename);
+            
+            // Track the mapping for markdown content updates
+            imageMap.set(originalFilename, normalizedFilename);
+            imageMap.set(img.path, normalizedFilename); // Also map full path
+            
             files.push({
-                path: `${candidatePath}/${img.path}`,
+                path: `${candidatePath}/${normalizedFilename}`,
                 content: img.content, // Already base64 stripped by frontend
             });
         });
     }
 
-    // Generate and add index.md
-    const frontmatter = generateFrontmatter(submission, avatarFilename, imageFilename);
+    // Update markdown content with normalized image paths
+    const normalizedContent = normalizeMarkdownImagePaths(submission.content, imageMap);
+
+    // Generate and add index.md with normalized content
+    const frontmatter = generateFrontmatter(
+        { ...submission, content: normalizedContent },
+        avatarFilename,
+        imageFilename
+    );
     files.push({
         path: `${candidatePath}/index.md`,
         content: Buffer.from(frontmatter).toString("base64"),

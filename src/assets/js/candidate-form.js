@@ -73,6 +73,62 @@ const ImageManager = {
     }
 };
 
+// Helper to Title Case strings
+const toTitleCase = (str) => {
+    return str.replace(
+        /\w\S*/g,
+        function (txt) {
+            return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+        }
+    );
+};
+
+// Helper to normalize Party names
+const formatParty = (party) => {
+    if (!party) return '';
+    const p = party.trim().toLowerCase();
+
+    // Exact short codes
+    if (['d', 'dem'].includes(p)) return 'Democrat';
+    if (['r', 'rep', 'gop'].includes(p)) return 'Republican';
+    if (['i', 'ind'].includes(p)) return 'Independent';
+    if (['l', 'lib'].includes(p)) return 'Libertarian';
+    if (['g', 'green'].includes(p)) return 'Green';
+
+    // Check startsWith for longer variants (e.g. "democrats" -> "Democrat")
+    if (p.startsWith('democrat')) return 'Democrat';
+    if (p.startsWith('republican')) return 'Republican';
+    if (p.startsWith('libertarian')) return 'Libertarian';
+
+    return toTitleCase(party);
+};
+
+// Helper to format tags (City, ST)
+const formatTag = (tag) => {
+    if (!tag) return '';
+
+    // Split by comma
+    const parts = tag.split(',').map(s => s.trim());
+
+    // Check for City, ST pattern (last part is exactly 2 chars)
+    if (parts.length > 1) {
+        const lastPart = parts[parts.length - 1];
+        if (lastPart.length === 2) {
+            // Uppercase the state abbreviation
+            parts[parts.length - 1] = lastPart.toUpperCase();
+
+            // Title case the rest
+            for (let i = 0; i < parts.length - 1; i++) {
+                parts[i] = toTitleCase(parts[i]);
+            }
+            return parts.join(', ');
+        }
+    }
+
+    // Default title case
+    return toTitleCase(tag);
+};
+
 // Initialize EasyMDE with custom image handling
 const easyMDE = new EasyMDE({
     element: document.getElementById('content-editor'),
@@ -582,18 +638,6 @@ window.editTag = (index) => {
     }
 };
 
-function addCurrentTag() {
-    if (!tagEntry) return;
-    const val = tagEntry.value.trim();
-    if (val && !currentTags.includes(val)) {
-        currentTags.push(val);
-        tagEntry.value = '';
-        renderTags();
-    } else if (currentTags.includes(val)) {
-        tagEntry.value = ''; // Clear duplicate attempt
-    }
-}
-
 if (tagEntry) {
     tagEntry.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -607,6 +651,47 @@ if (tagEntry) {
     });
 
     tagEntry.addEventListener('blur', addCurrentTag);
+}
+
+
+
+// Auto-formatting on Blur
+const candidateNameInput = document.getElementById('candidate-name');
+const positionTitleInput = document.getElementById('position-title');
+const partyInput = document.getElementById('party');
+// Tag entry is already handled by addCurrentTag which we will update
+
+if (candidateNameInput) {
+    candidateNameInput.addEventListener('blur', () => {
+        candidateNameInput.value = toTitleCase(candidateNameInput.value);
+    });
+}
+if (positionTitleInput) {
+    positionTitleInput.addEventListener('blur', () => {
+        positionTitleInput.value = toTitleCase(positionTitleInput.value);
+    });
+}
+if (partyInput) {
+    partyInput.addEventListener('blur', () => {
+        partyInput.value = formatParty(partyInput.value);
+    });
+}
+
+function addCurrentTag() {
+    if (!tagEntry) return;
+    let val = tagEntry.value.trim(); // Changed to let so we can modify it
+
+    if (val) {
+        val = formatTag(val); // Format BEFORE checking duplicates
+    }
+
+    if (val && !currentTags.includes(val)) {
+        currentTags.push(val);
+        tagEntry.value = '';
+        renderTags();
+    } else if (currentTags.includes(val)) {
+        tagEntry.value = ''; // Clear duplicate attempt
+    }
 }
 
 // Form submission
@@ -700,13 +785,21 @@ if (form) {
                 additionalImages.push(rep.imageData);
             });
 
+            // Format Tags
+            const formattedTags = tags.map(t => formatTag(t));
+
+            // Format Categories (same logic as tags for now or just Title Case)
+            // Categories are [Category, State]. State is usually 2 letter uppercase or full name.
+            // If we assume categories are simple Title Case:
+            const formattedCategories = categories.map(c => toTitleCase(c));
+
             const payload = {
-                candidate: document.getElementById('candidate-name').value,
-                title: document.getElementById('position-title').value,
-                party: document.getElementById('party').value,
+                candidate: toTitleCase(document.getElementById('candidate-name').value),
+                title: toTitleCase(document.getElementById('position-title').value),
+                party: formatParty(document.getElementById('party').value),
                 electionDate: document.getElementById('election-date').value,
-                categories: categories,
-                tags: tags,
+                categories: formattedCategories,
+                tags: formattedTags,
                 about: document.getElementById('about').value,
                 content: finalContent,
                 additionalImages: additionalImages,

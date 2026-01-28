@@ -698,6 +698,7 @@ function addCurrentTag() {
 const form = document.getElementById('candidate-form');
 const successMessage = document.getElementById('success-message');
 const errorMessage = document.getElementById('error-message');
+const submitBtn = document.getElementById('submit-btn');
 
 if (form) {
     form.addEventListener('submit', async (e) => {
@@ -826,7 +827,8 @@ if (form) {
             };
 
             // Submit to Azure Function
-            const response = await fetch('https://democracycandidate-prod-funcccd8ebf4.azurewebsites.net/api/submitCandidate', {
+            const apiUrl = window.CANDIDATE_FORM_CONFIG?.apiUrl || 'https://democracycandidate-prod-funcccd8ebf4.azurewebsites.net/api/submitCandidate';
+            const response = await fetch(apiUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -837,24 +839,11 @@ if (form) {
             const result = await response.json();
 
             if (result.success) {
-                // Show success message
-                document.getElementById('pr-link').href = result.pullRequestUrl;
-                document.getElementById('pr-link').textContent = result.pullRequestUrl;
-                document.getElementById('correlation-id').textContent = result.correlationId;
-                if (successMessage) {
-                    successMessage.classList.remove('hidden');
-                    successMessage.scrollIntoView({ behavior: 'smooth' });
-                }
-
-                // Reset form
-                form.reset();
-                currentTags = [];
-                renderTags();
-                easyMDE.value('');
-                document.getElementById('avatar-preview').classList.add('hidden');
-                document.getElementById('title-preview').classList.add('hidden');
-                turnstile.reset();
-
+                // Redirect to success page
+                // Use replace() so back button doesn't resubmit
+                const successUrl = `/running/success/?pr=${encodeURIComponent(result.pullRequestUrl)}&cid=${encodeURIComponent(result.correlationId || '')}`;
+                window.location.replace(successUrl);
+                return;
             } else {
                 throw new Error(result.message || 'Submission failed');
             }

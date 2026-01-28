@@ -293,6 +293,13 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
 
+  <!-- Inject API Configuration -->
+  <script>
+    window.CANDIDATE_FORM_CONFIG = {
+      apiUrl: {{ .Site.Params.api.submit_candidate_url | jsonify | safeJS }}
+    };
+  </script>
+
   <!-- Form Handler Script -->
   {{ $script := resources.Get "js/candidate-form.js" | minify | fingerprint }}
   <script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}"></script>

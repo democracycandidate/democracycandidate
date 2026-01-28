@@ -8,6 +8,7 @@
         "watch": "tsc -w",
         "prestart": "npm run build",
         "start": "func start",
+        "azurite": "azurite --silent --location .azurite --debug .azurite/debug.log --skipApiVersionCheck",
         "test": "echo \"No tests yet\""
     },
     "dependencies": {
@@ -18,7 +19,8 @@
     },
     "devDependencies": {
         "@types/node": "^22",
-        "typescript": "^5.7.0",
-        "azure-functions-core-tools": "^4.0.0"
+        "azure-functions-core-tools": "^4.0.0",
+        "azurite": "^3.35.0",
+        "typescript": "^5.7.0"
     }
 }

@@ -7,6 +7,7 @@ import { CandidateSubmission, SubmissionResponse, ContactRecord, TurnstileVerify
 
 // Environment variables
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY!;
+const IS_LOCAL_DEV = process.env.IS_LOCAL_DEV === "true"; // Skip Turnstile validation
 const CONTACT_STORAGE_CONNECTION = process.env.CONTACT_STORAGE_CONNECTION!;
 const CONTACT_CONTAINER_NAME = process.env.CONTACT_CONTAINER_NAME!;
 const GITHUB_APP_ID = process.env.GITHUB_APP_ID!;
@@ -17,9 +18,67 @@ const GITHUB_REPO_NAME = process.env.GITHUB_REPO_NAME!;           // Main repo f
 const GITHUB_FORM_REPO_NAME = process.env.GITHUB_FORM_REPO_NAME!; // Fork repo for branches
 
 /**
+ * Safely parse GitHub App private key from environment variable.
+ * Handles various formats: base64, escaped newlines, missing headers, etc.
+ */
+function parseGitHubPrivateKey(rawKey: string): string | null {
+    if (!rawKey || rawKey.includes('your-private-key-here') || rawKey.includes('your-github-app')) {
+        return null; // Placeholder value
+    }
+
+    let key = rawKey.trim();
+
+    // Handle escaped newlines (\n -> actual newlines)
+    key = key.replace(/\\n/g, '\n');
+
+    // If it doesn't have the PEM header/footer, add them
+    if (!key.includes('BEGIN')) {
+        key = `-----BEGIN RSA PRIVATE KEY-----\n${key}\n-----END RSA PRIVATE KEY-----`;
+    }
+
+    // Ensure proper formatting with newlines after header and before footer
+    key = key.replace(/-----BEGIN RSA PRIVATE KEY-----\s*/, '-----BEGIN RSA PRIVATE KEY-----\n');
+    key = key.replace(/\s*-----END RSA PRIVATE KEY-----/, '\n-----END RSA PRIVATE KEY-----');
+
+    // Verify it looks like a valid key (has header, footer, and some content)
+    if (!key.includes('BEGIN RSA PRIVATE KEY') || !key.includes('END RSA PRIVATE KEY')) {
+        return null;
+    }
+
+    // Extract the base64 content between header and footer
+    const lines = key.split('\n');
+    const contentLines = lines.filter(line => 
+        !line.includes('BEGIN') && !line.includes('END') && line.trim()
+    );
+    
+    // Join all content and remove any spaces
+    const content = contentLines.join('').replace(/\s/g, '');
+
+    if (content.length < 100) { // RSA keys should be much longer
+        return null;
+    }
+
+    // Reformat: split base64 content into 64-character lines (standard PEM format)
+    const formattedLines = [];
+    for (let i = 0; i < content.length; i += 64) {
+        formattedLines.push(content.substring(i, i + 64));
+    }
+
+    // Reconstruct the key with proper line breaks
+    return `-----BEGIN RSA PRIVATE KEY-----\n${formattedLines.join('\n')}\n-----END RSA PRIVATE KEY-----`;
+}
+
+const GITHUB_PRIVATE_KEY_SAFE = parseGitHubPrivateKey(GITHUB_APP_PRIVATE_KEY);
+
+/**
  * Validate Cloudflare Turnstile token
  */
 async function verifyTurnstile(token: string): Promise<boolean> {
+    // Skip validation in local development environment
+    if (IS_LOCAL_DEV) {
+        return true;
+    }
+    
     const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -39,6 +98,10 @@ async function verifyTurnstile(token: string): Promise<boolean> {
 async function storeContactInfo(record: ContactRecord): Promise<void> {
     const blobServiceClient = BlobServiceClient.fromConnectionString(CONTACT_STORAGE_CONNECTION);
     const containerClient = blobServiceClient.getContainerClient(CONTACT_CONTAINER_NAME);
+    
+    // Ensure container exists (safe for both local and prod)
+    await containerClient.createIfNotExists();
+    
     const blobClient = containerClient.getBlockBlobClient(`${record.correlationId}.json`);
 
     await blobClient.upload(
@@ -52,9 +115,13 @@ async function storeContactInfo(record: ContactRecord): Promise<void> {
  * Create authenticated Octokit instance using GitHub App
  */
 async function getOctokit(): Promise<Octokit> {
+    if (!GITHUB_PRIVATE_KEY_SAFE) {
+        throw new Error('GitHub private key is not configured or invalid');
+    }
+
     const auth = createAppAuth({
         appId: GITHUB_APP_ID,
-        privateKey: GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, "\n"), // Handle escaped newlines
+        privateKey: GITHUB_PRIVATE_KEY_SAFE,
         installationId: parseInt(GITHUB_APP_INSTALLATION_ID, 10),
     });
 
@@ -148,16 +215,28 @@ async function createCandidatePR(
     const year = submission.electionDate.split('-')[0];
     const candidatePath = `src/content/english/candidates/${year}/${slug}`;
 
-    // Get default branch SHA from main repo
-    const { data: mainRepo } = await octokit.repos.get({
+    // Helper to determine if a file should be treated as binary (not SVG)
+    const isBinaryFile = (filename: string): boolean => {
+        const ext = filename.toLowerCase().split('.').pop();
+        return ext !== 'svg'; // SVG is text/XML, not binary
+    };
+
+    // Get default branch SHA from formsubmissions repo (where we'll create the branch)
+    const { data: formRepo } = await octokit.repos.get({
         owner: GITHUB_REPO_OWNER,
-        repo: GITHUB_REPO_NAME,
+        repo: GITHUB_FORM_REPO_NAME,
     });
 
     const { data: ref } = await octokit.git.getRef({
         owner: GITHUB_REPO_OWNER,
+        repo: GITHUB_FORM_REPO_NAME,
+        ref: `heads/${formRepo.default_branch}`,
+    });
+
+    // Get main repo info (for PR base branch)
+    const { data: mainRepo } = await octokit.repos.get({
+        owner: GITHUB_REPO_OWNER,
         repo: GITHUB_REPO_NAME,
-        ref: `heads/${mainRepo.default_branch}`,
     });
 
     // Create branch in formsubmissions repo
@@ -171,7 +250,7 @@ async function createCandidatePR(
     context.log(`Created branch ${branchName} in ${GITHUB_FORM_REPO_NAME}`);
 
     // Prepare files to commit
-    const files: Array<{ path: string; content: string }> = [];
+    const files: Array<{ path: string; content: string; encoding?: 'base64' | 'utf-8' }> = [];
     const imageMap = new Map<string, string>(); // Track original -> normalized paths for markdown updates
 
     // Process avatar image
@@ -182,6 +261,7 @@ async function createCandidatePR(
         files.push({
             path: `${candidatePath}/${avatarFilename}`,
             content: base64Data,
+            encoding: 'base64',
         });
     }
 
@@ -193,6 +273,7 @@ async function createCandidatePR(
         files.push({
             path: `${candidatePath}/${imageFilename}`,
             content: base64Data,
+            encoding: 'base64',
         });
     }
 
@@ -207,9 +288,13 @@ async function createCandidatePR(
             imageMap.set(originalFilename, normalizedFilename);
             imageMap.set(img.path, normalizedFilename); // Also map full path
             
+            // SVG files are XML/text, should not be base64 encoded
+            const encoding = isBinaryFile(normalizedFilename) ? 'base64' : undefined;
+            
             files.push({
                 path: `${candidatePath}/${normalizedFilename}`,
-                content: img.content, // Already base64 stripped by frontend
+                content: encoding === 'base64' ? img.content : Buffer.from(img.content, 'base64').toString('utf-8'),
+                encoding,
             });
         });
     }
@@ -225,7 +310,8 @@ async function createCandidatePR(
     );
     files.push({
         path: `${candidatePath}/index.md`,
-        content: Buffer.from(frontmatter).toString("base64"),
+        content: frontmatter,
+        // No encoding specified = UTF-8 text (default)
     });
 
     // Create tree with all files
@@ -235,11 +321,32 @@ async function createCandidatePR(
         tree_sha: ref.object.sha,
     });
 
-    const treeItems = files.map(file => ({
-        path: file.path,
-        mode: "100644" as const,
-        type: "blob" as const,
-        content: file.content,
+    // Create blobs for all files and build tree items
+    const treeItems = await Promise.all(files.map(async (file) => {
+        if (file.encoding === 'base64') {
+            // For binary files, create blob separately with base64 encoding
+            const { data: blob } = await octokit.git.createBlob({
+                owner: GITHUB_REPO_OWNER,
+                repo: GITHUB_FORM_REPO_NAME,
+                content: file.content,
+                encoding: 'base64',
+            });
+            
+            return {
+                path: file.path,
+                mode: "100644" as const,
+                type: "blob" as const,
+                sha: blob.sha,
+            };
+        } else {
+            // For text files, use inline content
+            return {
+                path: file.path,
+                mode: "100644" as const,
+                type: "blob" as const,
+                content: file.content,
+            };
+        }
     }));
 
     const { data: newTree } = await octokit.git.createTree({
@@ -285,8 +392,9 @@ async function createCandidatePR(
 *Correlation ID: \`${correlationId}\`*
 
 Please verify the candidate information and merge when ready.`,
-        head: `${GITHUB_REPO_OWNER}:${branchName}`,
+        head: branchName, // Same-org fork: just use branch name
         base: mainRepo.default_branch,
+        maintainer_can_modify: true,
     });
 
     context.log(`Created PR #${pr.number}: ${pr.html_url}`);
@@ -329,7 +437,19 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
 
         const correlationId = randomUUID();
 
-        // Store contact info
+        let prUrl = '';
+        
+        if (IS_LOCAL_DEV && !GITHUB_PRIVATE_KEY_SAFE) {
+            // Local dev without GitHub configured - skip PR creation
+            context.log('[LOCAL_DEV] Skipping GitHub PR creation (credentials not configured)');
+            prUrl = 'http://localhost:mock-pr-url';
+        } else {
+            // Create GitHub PR (works in local dev with real creds or production)
+            const octokit = await getOctokit();
+            prUrl = await createCandidatePR(octokit, submission, correlationId, context);
+        }
+
+        // Store contact info (once, with PR URL)
         const contactRecord: ContactRecord = {
             correlationId,
             submittedAt: new Date().toISOString(),
@@ -339,20 +459,11 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
             submitterName: submission.submitterName,
             submitterRelationship: submission.submitterRelationship,
             candidateName: submission.candidate,
-            status: "pending",
+            pullRequestUrl: prUrl,
         };
 
         await storeContactInfo(contactRecord);
         context.log(`Stored contact info for ${correlationId}`);
-
-        // Create GitHub PR
-        const octokit = await getOctokit();
-        const prUrl = await createCandidatePR(octokit, submission, correlationId, context);
-
-        // Update contact record with PR URL
-        contactRecord.pullRequestUrl = prUrl;
-        contactRecord.status = "pr_created";
-        await storeContactInfo(contactRecord);
 
         const response: SubmissionResponse = {
             success: true,

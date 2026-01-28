@@ -57,7 +57,6 @@ export interface ContactRecord {
     submitterRelationship?: string;
     candidateName: string;
     pullRequestUrl?: string;
-    status: 'pending' | 'pr_created' | 'pr_merged' | 'rejected';
 }
 
 // Turnstile verification response

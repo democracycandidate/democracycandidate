@@ -1,7 +1,7 @@
 ---
-title: "Add Your Candidate Profile"
+title: "Add a Candidate"
 meta_title: "Contribute Your Pro-Democracy Candidate Profile"
-description: "Add your candidate profile to Democracy Candidate"
+description: "Add a candidate to Democracy Candidate"
 draft: false
 layout: "contribute"
 ---

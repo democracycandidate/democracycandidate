@@ -215,10 +215,9 @@ async function createCandidatePR(
     const year = submission.electionDate.split('-')[0];
     const candidatePath = `src/content/english/candidates/${year}/${slug}`;
 
-    // Helper to determine if a file should be treated as binary (not SVG)
-    const isBinaryFile = (filename: string): boolean => {
-        const ext = filename.toLowerCase().split('.').pop();
-        return ext !== 'svg'; // SVG is text/XML, not binary
+    // Helper to check if file is SVG (text-based, not binary)
+    const isSVG = (filename: string): boolean => {
+        return filename.toLowerCase().endsWith('.svg');
     };
 
     // Get default branch SHA from formsubmissions repo (where we'll create the branch)
@@ -288,14 +287,21 @@ async function createCandidatePR(
             imageMap.set(originalFilename, normalizedFilename);
             imageMap.set(img.path, normalizedFilename); // Also map full path
             
-            // SVG files are XML/text, should not be base64 encoded
-            const encoding = isBinaryFile(normalizedFilename) ? 'base64' : undefined;
-            
-            files.push({
-                path: `${candidatePath}/${normalizedFilename}`,
-                content: encoding === 'base64' ? img.content : Buffer.from(img.content, 'base64').toString('utf-8'),
-                encoding,
-            });
+            if (isSVG(normalizedFilename)) {
+                // SVG files: decode base64 to UTF-8 text
+                files.push({
+                    path: `${candidatePath}/${normalizedFilename}`,
+                    content: Buffer.from(img.content, 'base64').toString('utf-8'),
+                    // No encoding = text file
+                });
+            } else {
+                // Binary images (PNG, JPG, etc.): keep as base64
+                files.push({
+                    path: `${candidatePath}/${normalizedFilename}`,
+                    content: img.content,
+                    encoding: 'base64',
+                });
+            }
         });
     }
 

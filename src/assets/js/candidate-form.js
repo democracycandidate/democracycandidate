@@ -27,6 +27,17 @@ const ImageManager = {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => {
+                // SVG files: preserve as-is, no canvas processing
+                // Check both MIME type and file extension
+                const isSVG = file.type === 'image/svg+xml' || file.name.toLowerCase().endsWith('.svg');
+                if (isSVG) {
+                    const base64 = e.target.result; // Already a data URL
+                    const id = ImageManager.add(file, base64, base64); // Use same for both preview and submission
+                    resolve({ id, filename: file.name });
+                    return;
+                }
+
+                // Raster images: compress via canvas
                 const img = new Image();
                 img.onload = () => {
                     const canvas = document.createElement('canvas');

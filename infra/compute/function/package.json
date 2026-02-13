@@ -9,7 +9,9 @@
         "prestart": "npm run build",
         "start": "func start",
         "azurite": "azurite --silent --location .azurite --debug .azurite/debug.log --skipApiVersionCheck",
-        "test": "echo \"No tests yet\""
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage"
     },
     "dependencies": {
         "@azure/functions": "^4.5.0",
@@ -18,9 +20,12 @@
         "@octokit/rest": "^21.0.0"
     },
     "devDependencies": {
+        "@types/jest": "^29.5.0",
         "@types/node": "^22",
         "azure-functions-core-tools": "^4.0.0",
         "azurite": "^3.35.0",
+        "jest": "^29.7.0",
+        "ts-jest": "^29.1.0",
         "typescript": "^5.7.0"
     }
 }

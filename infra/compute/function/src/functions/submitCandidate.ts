@@ -381,7 +381,8 @@ async function createCandidatePR(
 
     context.log(`Committed files to ${branchName}`);
 
-    // Create PR from formsubmissions repo to main repo
+    // Create PR from formsubmissions fork to main repo
+    // For same-org cross-repo PRs: head is bare branch name, head_repo is "owner/repo" (full path)
     const { data: pr } = await octokit.pulls.create({
         owner: GITHUB_REPO_OWNER,
         repo: GITHUB_REPO_NAME,
@@ -398,7 +399,8 @@ async function createCandidatePR(
 *Correlation ID: \`${correlationId}\`*
 
 Please verify the candidate information and merge when ready.`,
-        head: branchName, // Same-org fork: just use branch name
+        head: branchName,
+        head_repo: `${GITHUB_REPO_OWNER}/${GITHUB_FORM_REPO_NAME}`,
         base: mainRepo.default_branch,
         maintainer_can_modify: true,
     });

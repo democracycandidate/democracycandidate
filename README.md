@@ -3,7 +3,7 @@ This project receives no support from PACs or parties.  Any candidate can be fea
 
 ## Democracy Pledge
 
-At time of writing this is identical to [Defense of Democracy's pledge](https://defenseofdemocracy.org/pledge/).  This project has no direct affiliation.  Your candidate will have to share proof of them taking the pledge before being accepted.
+This pledge may be revised periodically, but all pledges and candidate profiles will be linked to the version of the pledge that was in effect when the candidate agreed to it.
 
 * I agree with the tenets expressed in the [Universal Declaration of Human Rights](https://www.un.org/en/about-us/universal-declaration-of-human-rights).
 * I acknowledge and celebrate the diverse mosaic within my community and world, spanning skin tones, religions, cultures, gender identities, sexual orientations, and backgrounds.

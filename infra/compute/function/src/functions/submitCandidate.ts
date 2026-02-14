@@ -7,6 +7,7 @@ import { CandidateSubmission, SubmissionResponse, ContactRecord, TurnstileVerify
 
 // Environment variables
 const TURNSTILE_SECRET_KEY = process.env.TURNSTILE_SECRET_KEY!;
+const IS_LOCAL_DEV = process.env.IS_LOCAL_DEV === "true"; // Skip Turnstile validation
 const CONTACT_STORAGE_CONNECTION = process.env.CONTACT_STORAGE_CONNECTION!;
 const CONTACT_CONTAINER_NAME = process.env.CONTACT_CONTAINER_NAME!;
 const GITHUB_APP_ID = process.env.GITHUB_APP_ID!;
@@ -17,9 +18,67 @@ const GITHUB_REPO_NAME = process.env.GITHUB_REPO_NAME!;           // Main repo f
 const GITHUB_FORM_REPO_NAME = process.env.GITHUB_FORM_REPO_NAME!; // Fork repo for branches
 
 /**
+ * Safely parse GitHub App private key from environment variable.
+ * Handles various formats: base64, escaped newlines, missing headers, etc.
+ */
+function parseGitHubPrivateKey(rawKey: string): string | null {
+    if (!rawKey || rawKey.includes('your-private-key-here') || rawKey.includes('your-github-app')) {
+        return null; // Placeholder value
+    }
+
+    let key = rawKey.trim();
+
+    // Handle escaped newlines (\n -> actual newlines)
+    key = key.replace(/\\n/g, '\n');
+
+    // If it doesn't have the PEM header/footer, add them
+    if (!key.includes('BEGIN')) {
+        key = `-----BEGIN RSA PRIVATE KEY-----\n${key}\n-----END RSA PRIVATE KEY-----`;
+    }
+
+    // Ensure proper formatting with newlines after header and before footer
+    key = key.replace(/-----BEGIN RSA PRIVATE KEY-----\s*/, '-----BEGIN RSA PRIVATE KEY-----\n');
+    key = key.replace(/\s*-----END RSA PRIVATE KEY-----/, '\n-----END RSA PRIVATE KEY-----');
+
+    // Verify it looks like a valid key (has header, footer, and some content)
+    if (!key.includes('BEGIN RSA PRIVATE KEY') || !key.includes('END RSA PRIVATE KEY')) {
+        return null;
+    }
+
+    // Extract the base64 content between header and footer
+    const lines = key.split('\n');
+    const contentLines = lines.filter(line => 
+        !line.includes('BEGIN') && !line.includes('END') && line.trim()
+    );
+    
+    // Join all content and remove any spaces
+    const content = contentLines.join('').replace(/\s/g, '');
+
+    if (content.length < 100) { // RSA keys should be much longer
+        return null;
+    }
+
+    // Reformat: split base64 content into 64-character lines (standard PEM format)
+    const formattedLines = [];
+    for (let i = 0; i < content.length; i += 64) {
+        formattedLines.push(content.substring(i, i + 64));
+    }
+
+    // Reconstruct the key with proper line breaks
+    return `-----BEGIN RSA PRIVATE KEY-----\n${formattedLines.join('\n')}\n-----END RSA PRIVATE KEY-----`;
+}
+
+const GITHUB_PRIVATE_KEY_SAFE = parseGitHubPrivateKey(GITHUB_APP_PRIVATE_KEY);
+
+/**
  * Validate Cloudflare Turnstile token
  */
 async function verifyTurnstile(token: string): Promise<boolean> {
+    // Skip validation in local development environment
+    if (IS_LOCAL_DEV) {
+        return true;
+    }
+    
     const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -39,6 +98,10 @@ async function verifyTurnstile(token: string): Promise<boolean> {
 async function storeContactInfo(record: ContactRecord): Promise<void> {
     const blobServiceClient = BlobServiceClient.fromConnectionString(CONTACT_STORAGE_CONNECTION);
     const containerClient = blobServiceClient.getContainerClient(CONTACT_CONTAINER_NAME);
+    
+    // Ensure container exists (safe for both local and prod)
+    await containerClient.createIfNotExists();
+    
     const blobClient = containerClient.getBlockBlobClient(`${record.correlationId}.json`);
 
     await blobClient.upload(
@@ -52,14 +115,63 @@ async function storeContactInfo(record: ContactRecord): Promise<void> {
  * Create authenticated Octokit instance using GitHub App
  */
 async function getOctokit(): Promise<Octokit> {
+    if (!GITHUB_PRIVATE_KEY_SAFE) {
+        throw new Error('GitHub private key is not configured or invalid');
+    }
+
     const auth = createAppAuth({
         appId: GITHUB_APP_ID,
-        privateKey: GITHUB_APP_PRIVATE_KEY.replace(/\\n/g, "\n"), // Handle escaped newlines
+        privateKey: GITHUB_PRIVATE_KEY_SAFE,
         installationId: parseInt(GITHUB_APP_INSTALLATION_ID, 10),
     });
 
     const { token } = await auth({ type: "installation" });
     return new Octokit({ auth: token });
+}
+
+/**
+ * Normalize filename: lowercase, replace spaces/special chars with dashes
+ */
+function normalizeFilename(filename: string): string {
+    // Extract extension
+    const lastDot = filename.lastIndexOf('.');
+    const name = lastDot > 0 ? filename.substring(0, lastDot) : filename;
+    const ext = lastDot > 0 ? filename.substring(lastDot) : '';
+    
+    // Normalize name: lowercase, replace non-alphanumeric with dashes, remove duplicate dashes
+    const normalized = name
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, ''); // Remove leading/trailing dashes
+    
+    return normalized + ext.toLowerCase();
+}
+
+/**
+ * Update markdown content to use normalized image paths
+ */
+function normalizeMarkdownImagePaths(content: string, imageMap: Map<string, string>): string {
+    let updated = content;
+    
+    // Replace image references: ![alt](oldpath) -> ![alt](normalizedpath)
+    imageMap.forEach((normalizedPath, originalPath) => {
+        // Match various markdown image syntaxes
+        const patterns = [
+            new RegExp(`!\\[([^\\]]*)\\]\\(${escapeRegex(originalPath)}\\)`, 'g'),
+            new RegExp(`!\\[([^\\]]*)\\]\\(\\.\\/\\.\\.\\/\\.\\.\\/assets\\/images\\/${escapeRegex(originalPath)}\\)`, 'g'),
+            new RegExp(`!\\[([^\\]]*)\\]\\(images\\/${escapeRegex(originalPath)}\\)`, 'g'),
+        ];
+        
+        patterns.forEach(pattern => {
+            updated = updated.replace(pattern, `![$1](${normalizedPath})`);
+        });
+    });
+    
+    return updated;
+}
+
+function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
@@ -74,8 +186,8 @@ meta_title: "${submission.candidate} for ${submission.title}"
 description: "${submission.candidate} for ${submission.title}"
 candidate: "${submission.candidate}"
 party: "${submission.party}"
-election_date: ${submission.election_date}T12:00:00Z
-image: "${imageFilename ? `/${imageFilename}` : ""}"
+election_date: ${submission.electionDate}T12:00:00Z
+image: "${imageFilename || ""}"
 categories: ${JSON.stringify(submission.categories)}
 tags: ${JSON.stringify(submission.tags)}
 draft: true
@@ -98,18 +210,32 @@ async function createCandidatePR(
 ): Promise<string> {
     const slug = submission.candidate.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
     const branchName = `form-${slug}-${correlationId.slice(0, 8)}`;
-    const candidatePath = `src/content/english/candidates/${slug}`;
+    
+    // Extract year from election date for folder structure
+    const year = submission.electionDate.split('-')[0];
+    const candidatePath = `src/content/english/candidates/${year}/${slug}`;
 
-    // Get default branch SHA from main repo
-    const { data: mainRepo } = await octokit.repos.get({
+    // Helper to check if file is SVG (text-based, not binary)
+    const isSVG = (filename: string): boolean => {
+        return filename.toLowerCase().endsWith('.svg');
+    };
+
+    // Get default branch SHA from formsubmissions repo (where we'll create the branch)
+    const { data: formRepo } = await octokit.repos.get({
         owner: GITHUB_REPO_OWNER,
-        repo: GITHUB_REPO_NAME,
+        repo: GITHUB_FORM_REPO_NAME,
     });
 
     const { data: ref } = await octokit.git.getRef({
         owner: GITHUB_REPO_OWNER,
+        repo: GITHUB_FORM_REPO_NAME,
+        ref: `heads/${formRepo.default_branch}`,
+    });
+
+    // Get main repo info (for PR base branch)
+    const { data: mainRepo } = await octokit.repos.get({
+        owner: GITHUB_REPO_OWNER,
         repo: GITHUB_REPO_NAME,
-        ref: `heads/${mainRepo.default_branch}`,
     });
 
     // Create branch in formsubmissions repo
@@ -123,35 +249,75 @@ async function createCandidatePR(
     context.log(`Created branch ${branchName} in ${GITHUB_FORM_REPO_NAME}`);
 
     // Prepare files to commit
-    const files: Array<{ path: string; content: string }> = [];
+    const files: Array<{ path: string; content: string; encoding?: 'base64' | 'utf-8' }> = [];
+    const imageMap = new Map<string, string>(); // Track original -> normalized paths for markdown updates
 
     // Process avatar image
     let avatarFilename: string | undefined;
     if (submission.avatarImage) {
-        avatarFilename = `${slug}-avatar.jpg`;
+        avatarFilename = normalizeFilename(`${slug}-avatar.jpg`);
         const base64Data = submission.avatarImage.replace(/^data:image\/\w+;base64,/, "");
         files.push({
             path: `${candidatePath}/${avatarFilename}`,
             content: base64Data,
+            encoding: 'base64',
         });
     }
 
     // Process title image
     let imageFilename: string | undefined;
     if (submission.titleImage) {
-        imageFilename = `${slug}-title.jpg`;
+        imageFilename = normalizeFilename(`${slug}-title.jpg`);
         const base64Data = submission.titleImage.replace(/^data:image\/\w+;base64,/, "");
         files.push({
             path: `${candidatePath}/${imageFilename}`,
             content: base64Data,
+            encoding: 'base64',
         });
     }
 
-    // Generate and add index.md
-    const frontmatter = generateFrontmatter(submission, avatarFilename, imageFilename);
+    // Process inline images with normalization
+    if (submission.additionalImages && submission.additionalImages.length > 0) {
+        submission.additionalImages.forEach(img => {
+            // Extract just the filename from the path
+            const originalFilename = img.path.split('/').pop() || img.path;
+            const normalizedFilename = normalizeFilename(originalFilename);
+            
+            // Track the mapping for markdown content updates
+            imageMap.set(originalFilename, normalizedFilename);
+            imageMap.set(img.path, normalizedFilename); // Also map full path
+            
+            if (isSVG(normalizedFilename)) {
+                // SVG files: decode base64 to UTF-8 text
+                files.push({
+                    path: `${candidatePath}/${normalizedFilename}`,
+                    content: Buffer.from(img.content, 'base64').toString('utf-8'),
+                    // No encoding = text file
+                });
+            } else {
+                // Binary images (PNG, JPG, etc.): keep as base64
+                files.push({
+                    path: `${candidatePath}/${normalizedFilename}`,
+                    content: img.content,
+                    encoding: 'base64',
+                });
+            }
+        });
+    }
+
+    // Update markdown content with normalized image paths
+    const normalizedContent = normalizeMarkdownImagePaths(submission.content, imageMap);
+
+    // Generate and add index.md with normalized content
+    const frontmatter = generateFrontmatter(
+        { ...submission, content: normalizedContent },
+        avatarFilename,
+        imageFilename
+    );
     files.push({
         path: `${candidatePath}/index.md`,
-        content: Buffer.from(frontmatter).toString("base64"),
+        content: frontmatter,
+        // No encoding specified = UTF-8 text (default)
     });
 
     // Create tree with all files
@@ -161,11 +327,32 @@ async function createCandidatePR(
         tree_sha: ref.object.sha,
     });
 
-    const treeItems = files.map(file => ({
-        path: file.path,
-        mode: "100644" as const,
-        type: "blob" as const,
-        content: file.content,
+    // Create blobs for all files and build tree items
+    const treeItems = await Promise.all(files.map(async (file) => {
+        if (file.encoding === 'base64') {
+            // For binary files, create blob separately with base64 encoding
+            const { data: blob } = await octokit.git.createBlob({
+                owner: GITHUB_REPO_OWNER,
+                repo: GITHUB_FORM_REPO_NAME,
+                content: file.content,
+                encoding: 'base64',
+            });
+            
+            return {
+                path: file.path,
+                mode: "100644" as const,
+                type: "blob" as const,
+                sha: blob.sha,
+            };
+        } else {
+            // For text files, use inline content
+            return {
+                path: file.path,
+                mode: "100644" as const,
+                type: "blob" as const,
+                content: file.content,
+            };
+        }
     }));
 
     const { data: newTree } = await octokit.git.createTree({
@@ -194,7 +381,8 @@ async function createCandidatePR(
 
     context.log(`Committed files to ${branchName}`);
 
-    // Create PR from formsubmissions repo to main repo
+    // Create PR from formsubmissions fork to main repo
+    // For same-org cross-repo PRs: head is bare branch name, head_repo is "owner/repo" (full path)
     const { data: pr } = await octokit.pulls.create({
         owner: GITHUB_REPO_OWNER,
         repo: GITHUB_REPO_NAME,
@@ -211,8 +399,10 @@ async function createCandidatePR(
 *Correlation ID: \`${correlationId}\`*
 
 Please verify the candidate information and merge when ready.`,
-        head: `${GITHUB_REPO_OWNER}:${branchName}`,
+        head: branchName,
+        head_repo: `${GITHUB_REPO_OWNER}/${GITHUB_FORM_REPO_NAME}`,
         base: mainRepo.default_branch,
+        maintainer_can_modify: true,
     });
 
     context.log(`Created PR #${pr.number}: ${pr.html_url}`);
@@ -255,28 +445,33 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
 
         const correlationId = randomUUID();
 
-        // Store contact info
+        let prUrl = '';
+        
+        if (IS_LOCAL_DEV && !GITHUB_PRIVATE_KEY_SAFE) {
+            // Local dev without GitHub configured - skip PR creation
+            context.log('[LOCAL_DEV] Skipping GitHub PR creation (credentials not configured)');
+            prUrl = 'http://localhost:mock-pr-url';
+        } else {
+            // Create GitHub PR (works in local dev with real creds or production)
+            const octokit = await getOctokit();
+            prUrl = await createCandidatePR(octokit, submission, correlationId, context);
+        }
+
+        // Store contact info (once, with PR URL)
         const contactRecord: ContactRecord = {
             correlationId,
             submittedAt: new Date().toISOString(),
             contactEmail: submission.contactEmail,
             contactPhone: submission.contactPhone,
             contactNotes: submission.contactNotes,
+            submitterName: submission.submitterName,
+            submitterRelationship: submission.submitterRelationship,
             candidateName: submission.candidate,
-            status: "pending",
+            pullRequestUrl: prUrl,
         };
 
         await storeContactInfo(contactRecord);
         context.log(`Stored contact info for ${correlationId}`);
-
-        // Create GitHub PR
-        const octokit = await getOctokit();
-        const prUrl = await createCandidatePR(octokit, submission, correlationId, context);
-
-        // Update contact record with PR URL
-        contactRecord.pullRequestUrl = prUrl;
-        contactRecord.status = "pr_created";
-        await storeContactInfo(contactRecord);
 
         const response: SubmissionResponse = {
             success: true,

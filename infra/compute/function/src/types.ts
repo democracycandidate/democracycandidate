@@ -8,7 +8,7 @@ export interface CandidateSubmission {
     title: string;           // Office/position title
     candidate: string;       // Candidate name
     party: string;           // Party affiliation
-    election_date: string;   // ISO date (YYYY-MM-DD)
+    electionDate: string;   // ISO date (YYYY-MM-DD)
     categories: string[];    // ["School Board", "Illinois"]
     tags: string[];          // ["Lake Park", "High School"]
     about: string;           // Short bio for card display
@@ -16,14 +16,22 @@ export interface CandidateSubmission {
     // Markdown body content
     content: string;         // Full markdown content (Policy, Experience, etc.)
 
-    // Images (base64 encoded with data URI prefix)
+    // Images (base64 encoded with data URI prefix or raw base64)
     titleImage?: string;     // Main/hero image
     avatarImage?: string;    // Profile photo
+
+    // Inline images from markdown
+    additionalImages?: Array<{
+        path: string;       // Relative path (e.g., "images/img-xyz.jpg")
+        content: string;    // Base64 content (without prefix)
+    }>;
 
     // Private contact info (stored in blob, NOT in PR)
     contactEmail: string;
     contactPhone?: string;
     contactNotes?: string;   // Any additional contact context
+    submitterName?: string;
+    submitterRelationship?: string;
 
     // Security
     turnstileToken: string;  // Cloudflare Turnstile response token
@@ -45,9 +53,10 @@ export interface ContactRecord {
     contactEmail: string;
     contactPhone?: string;
     contactNotes?: string;
+    submitterName?: string;
+    submitterRelationship?: string;
     candidateName: string;
     pullRequestUrl?: string;
-    status: 'pending' | 'pr_created' | 'pr_merged' | 'rejected';
 }
 
 // Turnstile verification response

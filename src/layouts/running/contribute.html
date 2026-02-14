@@ -1,0 +1,307 @@
+{{ define "main" }}
+  {{ partial "page-header" . }}
+  <section class="section-compact">
+    <div class="container">
+      <div class="row justify-center">
+        <div class="md:col-10 lg:col-10">
+          
+          <!-- Instructions -->
+          {{ .Page.RenderString "{{< contribution-requirements >}}" | safeHTML }}
+
+          <!-- Form -->
+          <form id="candidate-form" class="row g-4" novalidate>
+            
+            <!-- Pledge Acknowledgment -->
+            <div class="col-12">
+              <div class="rounded border border-border p-4 dark:border-darkmode-border">
+                <label class="form-check-label flex items-start">
+                  <input type="checkbox" id="pledge-checkbox" required class="form-check-input mt-1 mr-3">
+                  <span>The candidate agrees to the <a href="/running/pledge" target="_blank" class="text-primary dark:text-blue-400 hover:underline">pro-democracy pledge</a> <span class="text-red-600">*</span></span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Candidate Information Section -->
+            <div class="col-12">
+              <h3 class="h4">Candidate Information</h3>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="candidate-name" class="form-label">Candidate Name <span class="text-red-600">*</span></label>
+              <input type="text" id="candidate-name" class="form-input" required>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="position-title" class="form-label">Office/Position Title <span class="text-red-600">*</span></label>
+              <input type="text" id="position-title" class="form-input" placeholder="Gravity Falls School Board 6" required>
+              <small class="form-text">The candidates list is alphabetized by this field, it is recommended to use the specific name instead of a generic position like "School Board"</small>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="party" class="form-label">Party Affiliation <span class="text-red-600">*</span></label>
+              <input type="text" id="party" class="form-input" placeholder="e.g., Independent, Democratic, Republican" required>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="election-date" class="form-label">Election Date <span class="text-red-600">*</span></label>
+              <input type="date" id="election-date" class="form-input" required>
+            </div>
+
+            <!-- Categorization Section -->
+            <div class="col-12 mt-6">
+              <h3 class="h4">Categorization</h3>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="category" class="form-label">Category <span class="text-red-600">*</span></label>
+              <select id="category" class="form-select" required>
+                <option value="">Select category...</option>
+                <option value="Forest Preserve">Forest Preserve</option>
+                <option value="Library Board">Library Board</option>
+                <option value="Park District">Park District</option>
+                <option value="School Board">School Board</option>
+                <option value="Township">Township</option>
+                <option value="Village">Village</option>
+                <option value="Other Local">...Other Local</option>
+              </select>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="state" class="form-label">State <span class="text-red-600">*</span></label>
+              <select id="state" class="form-select" required>
+                <option value="">Select state...</option>
+                <option value="Alabama">Alabama</option>
+                <option value="Alaska">Alaska</option>
+                <option value="Arizona">Arizona</option>
+                <option value="Arkansas">Arkansas</option>
+                <option value="California">California</option>
+                <option value="Colorado">Colorado</option>
+                <option value="Connecticut">Connecticut</option>
+                <option value="Delaware">Delaware</option>
+                <option value="Florida">Florida</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Hawaii">Hawaii</option>
+                <option value="Idaho">Idaho</option>
+                <option value="Illinois">Illinois</option>
+                <option value="Indiana">Indiana</option>
+                <option value="Iowa">Iowa</option>
+                <option value="Kansas">Kansas</option>
+                <option value="Kentucky">Kentucky</option>
+                <option value="Louisiana">Louisiana</option>
+                <option value="Maine">Maine</option>
+                <option value="Maryland">Maryland</option>
+                <option value="Massachusetts">Massachusetts</option>
+                <option value="Michigan">Michigan</option>
+                <option value="Minnesota">Minnesota</option>
+                <option value="Mississippi">Mississippi</option>
+                <option value="Missouri">Missouri</option>
+                <option value="Montana">Montana</option>
+                <option value="Nebraska">Nebraska</option>
+                <option value="Nevada">Nevada</option>
+                <option value="New Hampshire">New Hampshire</option>
+                <option value="New Jersey">New Jersey</option>
+                <option value="New Mexico">New Mexico</option>
+                <option value="New York">New York</option>
+                <option value="North Carolina">North Carolina</option>
+                <option value="North Dakota">North Dakota</option>
+                <option value="Ohio">Ohio</option>
+                <option value="Oklahoma">Oklahoma</option>
+                <option value="Oregon">Oregon</option>
+                <option value="Pennsylvania">Pennsylvania</option>
+                <option value="Rhode Island">Rhode Island</option>
+                <option value="South Carolina">South Carolina</option>
+                <option value="South Dakota">South Dakota</option>
+                <option value="Tennessee">Tennessee</option>
+                <option value="Texas">Texas</option>
+                <option value="Utah">Utah</option>
+                <option value="Vermont">Vermont</option>
+                <option value="Virginia">Virginia</option>
+                <option value="Washington">Washington</option>
+                <option value="West Virginia">West Virginia</option>
+                <option value="Wisconsin">Wisconsin</option>
+                <option value="Wyoming">Wyoming</option>
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label for="tags" class="form-label">Location Tags <span class="text-red-600">*</span></label>
+              
+              <!-- Tag Input Container -->
+              <div id="tag-input-container" class="form-input flex flex-wrap gap-2 items-center min-h-[45px] py-1.5 focus-within:ring-1 focus-within:border-primary">
+                <div id="tags-list" class="flex flex-wrap gap-2"></div>
+                <input type="text" id="tag-entry" class="bg-transparent border-none outline-none flex-grow min-w-[150px] text-inherit placeholder-gray-400 p-0 focus:ring-0" placeholder="Type tag & press Enter...">
+              </div>
+              
+              <small class="form-text mt-1 block text-gray-500">
+                Tags help group candidates (e.g. "School Board", "District 15") and generate unique pages like <a href="/tags/bloomingdale-il/" target="_blank" class="text-primary dark:text-blue-400 hover:underline">/tags/bloomingdale-il/</a>. Essential for QR codes, regional groupings, and slates.
+              </small>
+            </div>
+
+            <!-- Images Section -->
+            <div class="col-12 mt-6">
+              <h3 class="h4">Photos</h3>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="avatar-upload" class="form-label">Main Photo <span class="text-red-600">*</span></label>
+              <input type="file" id="avatar-upload" class="form-input" accept="image/*" required>
+              <small class="form-text">Square photo, max 5MB</small>
+              <p id="avatar-error" class="hidden text-red-600 text-sm mt-1 font-medium"></p>
+              <input type="hidden" id="avatar-data">
+              <div id="avatar-preview" class="mt-3 hidden">
+                <img src="" alt="Avatar preview" class="max-h-[150px] rounded">
+              </div>
+
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="title-upload" class="form-label">Title Photo (Optional)</label>
+              <input type="file" id="title-upload" class="form-input" accept="image/*">
+              <small class="form-text">Wide banner image, max 5MB</small>
+              <p id="title-error" class="hidden text-red-600 text-sm mt-1 font-medium"></p>
+              <input type="hidden" id="title-data">
+              <div id="title-preview" class="mt-3 hidden">
+                <img src="" alt="Title preview" class="max-h-[150px] rounded">
+              </div>
+            </div>
+
+            <!-- Content Section -->
+            <div class="col-12 mt-6">
+              <h3 class="h4">Biography Content</h3>
+            </div>
+
+            <div class="col-12">
+              <label for="about" class="form-label">About section<span class="text-red-600">*</span></label>
+              <textarea id="about" class="form-input" rows="4" required placeholder="A brief summary about the candidate. This will show under the profile photo on the candidate lists as well as in the 'About' section of profile page."></textarea>
+              <div class="flex justify-between items-start mt-1">
+                <small class="form-text"><span id="about-count">0</span> characters</small>
+                <small id="about-warning" class="form-text text-orange-600 hidden font-medium text-right max-w-[70%]">
+                  Candidate list view will stop at 150 characters.  The full text will show on the candidate page, but review the preview below closely to ensure this is a good cutoff point.
+                </small>
+              </div>
+              
+              <div id="card-preview" class="mt-4 hidden border rounded-lg p-4 bg-white shadow-sm dark:bg-darkmode-theme-light max-w-sm mx-auto text-center">
+                <p class="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide text-left">List View Preview</p>
+                <img id="preview-image" src="" alt="Avatar preview" class="w-64 h-64 object-cover rounded mx-auto mb-3 hidden">
+                <p id="preview-bio" class="text-sm text-gray-700 dark:text-gray-300 text-left"></p>
+                <div class="mt-3 text-left">
+                  <span class="inline-block text-xs font-semibold text-primary border border-primary dark:text-blue-300 dark:border-blue-300 px-2 py-1 rounded">Read More</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-12">
+              <label for="content-editor" class="form-label">Full Biography <span class="text-red-600">*</span></label>
+              <small class="form-text mb-2 block">This is the middle of your candidate page.  The 'About' section you filled out above will show at the top of your page.  To see how it all goes together review <a href="/candidates/" target="_blank" class="text-primary dark:text-blue-400 hover:underline">any candidate's page here</a></small>
+              <textarea id="content-editor"></textarea>
+            </div>
+
+            <!-- Contact Information Section -->
+            <div class="col-12 mt-6">
+              <h3 class="h4">Contact Information (Private)</h3>
+              <p class="text-sm text-gray-600 dark:text-gray-400">This information will be stored securely and never published. We will use it to contact you and verify the candidate pledge.</p>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="contact-email" class="form-label">Email Address <span class="text-red-600">*</span></label>
+              <input type="email" id="contact-email" class="form-input" required>
+              <p id="email-error" class="hidden text-red-600 text-sm mt-1 font-medium"></p>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="contact-phone" class="form-label">Phone Number (Optional)</label>
+              <input type="tel" id="contact-phone" class="form-input">
+              <p id="phone-error" class="hidden text-red-600 text-sm mt-1 font-medium"></p>
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="submitter-name" class="form-label">Your Name (Optional)</label>
+              <input type="text" id="submitter-name" class="form-input" placeholder="If different from candidate">
+            </div>
+
+            <div class="md:col-6 col-12">
+              <label for="submitter-relationship" class="form-label">Relationship (Optional)</label>
+              <input type="text" id="submitter-relationship" class="form-input" placeholder="e.g. Campaign Manager, Spouse">
+            </div>
+
+            <div class="col-12">
+              <label for="contact-notes" class="form-label">Additional Notes (Optional)</label>
+              <textarea id="contact-notes" class="form-input" rows="3" placeholder="Any additional context or verification details"></textarea>
+            </div>
+
+            <!-- Turnstile & Submit -->
+            <div class="col-12 mt-6">
+              <div id="validation-summary" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg dark:bg-red-900/20 dark:border-red-800">
+                <h4 class="text-red-800 dark:text-red-200 font-medium mb-2">Please correct the following errors:</h4>
+                <ul id="validation-list" class="list-disc pl-5 text-red-700 dark:text-red-300 text-sm space-y-1"></ul>
+              </div>
+
+              <div class="cf-turnstile mb-4" data-sitekey="{{ .Site.Params.turnstile.site_key }}"></div>
+              <button type="submit" id="submit-btn" class="btn btn-primary">
+                <span id="submit-text">Submit Candidate Profile</span>
+                <span id="submit-spinner" class="hidden">
+                  <svg class="inline h-4 w-4 animate-spin" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Submitting...
+                </span>
+              </button>
+            </div>
+
+          </form>
+
+          <!-- Success/Error Messages -->
+          <div id="success-message" class="mt-6 hidden rounded-lg bg-green-100 p-6 dark:bg-green-900">
+            <h3 class="h5 mb-2 text-green-800 dark:text-green-100">Submission Successful!</h3>
+            <p class="mb-2 text-green-700 dark:text-green-200">Your candidate profile has been submitted. A pull request has been created for review.</p>
+            <p class="mb-2"><strong>PR Link:</strong> <a id="pr-link" href="#" target="_blank" class="text-green-600 underline dark:text-green-300"></a></p>
+            <p class="text-sm text-green-600 dark:text-green-300">Correlation ID: <code id="correlation-id" class="rounded bg-green-200 px-2 py-1 dark:bg-green-800"></code></p>
+          </div>
+
+          <div id="error-message" class="mt-6 hidden rounded-lg bg-red-100 p-6 dark:bg-red-900">
+            <h3 class="h5 mb-2 text-red-800 dark:text-red-100">Submission Failed</h3>
+            <p id="error-text" class="text-red-700 dark:text-red-200"></p>
+            <ul id="error-list" class="mt-2 list-disc pl-5 text-red-600 dark:text-red-300"></ul>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Include marked for custom rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- Include EasyMDE CSS and JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde@latest/dist/easymde.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/easymde@latest/dist/easymde.min.js"></script>
+  
+  <!-- Turnstile Script -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+
+  <!-- intlTelInput CSS and JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/css/intlTelInput.css">
+  <style>
+    .iti {
+      width: 100% !important;
+      display: block !important;
+    }
+    .iti input {
+      width: 100% !important;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.10.1/build/js/intlTelInput.min.js"></script>
+
+  <!-- Inject API Configuration -->
+  <script>
+    window.CANDIDATE_FORM_CONFIG = {
+      apiUrl: {{ .Site.Params.api.submit_candidate_url | jsonify | safeJS }}
+    };
+  </script>
+
+  <!-- Form Handler Script -->
+  {{ $script := resources.Get "js/candidate-form.js" | minify | fingerprint }}
+  <script src="{{ $script.RelPermalink }}" integrity="{{ $script.Data.Integrity }}"></script>
+
+{{ end }}

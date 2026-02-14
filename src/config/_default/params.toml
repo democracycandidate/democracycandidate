@@ -29,6 +29,15 @@ custom_script = ""
 # copyright
 # copyright = "Site design uses Hugoplate which is Designed & Developed by [Zeon Studio](https://zeon.studio)"
 
+# Turnstile (Cloudflare bot protection for forms)
+[turnstile]
+site_key = "0x4AAAAAACQu0meHoEJN4dXz"
+
+# API Configuration
+[api]
+submit_candidate_url = "https://democracycandidate-prod-funcccd8ebf4.azurewebsites.net/api/submitCandidate"
+
+
 # Preloader
 # preloader module: https://github.com/gethugothemes/hugo-modules/tree/master/components/preloader
 [preloader]

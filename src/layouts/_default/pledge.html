@@ -6,7 +6,11 @@
       <div class="row justify-center">
         <div class="lg:col-10">
           <div class="content">
-            {{ partial "pledge-content.html" . }}
+            {{ with .Site.GetPage "/pledge" }}
+              {{ .Content }}
+            {{ else }}
+              {{ errorf "Could not find pledge content page at /pledge" }}
+            {{ end }}
           </div>
           
           {{ if .Params.show_candidate_info }}

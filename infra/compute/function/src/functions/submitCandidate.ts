@@ -17,6 +17,26 @@ const GITHUB_REPO_OWNER = process.env.GITHUB_REPO_OWNER!;
 const GITHUB_REPO_NAME = process.env.GITHUB_REPO_NAME!;           // Main repo for PRs
 const GITHUB_FORM_REPO_NAME = process.env.GITHUB_FORM_REPO_NAME!; // Fork repo for branches
 
+// CORS: allowed origins from env (comma-separated) or fallback to prod default
+const ALLOWED_ORIGINS: string[] = (
+    process.env.ALLOWED_ORIGINS || "https://www.democracycandidate.us"
+).split(",").map(o => o.trim()).filter(Boolean);
+
+/**
+ * Return CORS headers for a given request origin.
+ * Always returns the specific requesting origin (not wildcard) so credentials work.
+ */
+function getCorsHeaders(request: HttpRequest): Record<string, string> {
+    const origin = request.headers.get("origin") || "";
+    const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+    return {
+        "Access-Control-Allow-Origin": allowedOrigin,
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+        "Access-Control-Max-Age": "86400",
+    };
+}
+
 /**
  * Safely parse GitHub App private key from environment variable.
  * Handles various formats: base64, escaped newlines, missing headers, etc.
@@ -416,6 +436,13 @@ Please verify the candidate information and merge when ready.`,
 async function submitCandidate(request: HttpRequest, context: InvocationContext): Promise<HttpResponseInit> {
     context.log(`Processing candidate submission request`);
 
+    const corsHeaders = getCorsHeaders(request);
+
+    // Handle CORS preflight — must respond before any async work
+    if (request.method === "OPTIONS") {
+        return { status: 204, headers: corsHeaders };
+    }
+
     try {
         const submission = await request.json() as CandidateSubmission;
 
@@ -430,6 +457,7 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
         if (errors.length > 0) {
             return {
                 status: 400,
+                headers: corsHeaders,
                 jsonBody: { success: false, message: "Validation failed", errors } as SubmissionResponse,
             };
         }
@@ -439,6 +467,7 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
         if (!isValidToken) {
             return {
                 status: 401,
+                headers: corsHeaders,
                 jsonBody: { success: false, message: "Invalid security token" } as SubmissionResponse,
             };
         }
@@ -482,6 +511,7 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
 
         return {
             status: 200,
+            headers: corsHeaders,
             jsonBody: response,
         };
 
@@ -490,6 +520,7 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
 
         return {
             status: 500,
+            headers: corsHeaders,
             jsonBody: {
                 success: false,
                 message: "An error occurred processing your submission. Please try again.",
@@ -499,9 +530,9 @@ async function submitCandidate(request: HttpRequest, context: InvocationContext)
     }
 }
 
-// Register the function
+// Register the function — OPTIONS is required for CORS preflight on Linux consumption plan
 app.http("submitCandidate", {
-    methods: ["POST"],
+    methods: ["POST", "OPTIONS"],
     authLevel: "anonymous",
     handler: submitCandidate,
 });

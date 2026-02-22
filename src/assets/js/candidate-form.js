@@ -354,6 +354,25 @@ const validateForm = () => {
 
     // 3. Custom Validations
 
+    // Website Validation
+    const formWebsiteInput = document.getElementById('website');
+    if (formWebsiteInput && formWebsiteInput.value.trim()) {
+        let val = formWebsiteInput.value.trim();
+        if (!/^https?:\/\//i.test(val)) {
+            val = 'https://' + val;
+            formWebsiteInput.value = val;
+        }
+        if (!/^https:\/\//i.test(val)) {
+            errors.push("Campaign website must use a secure https:// link.");
+        } else {
+            try {
+                new URL(val);
+            } catch (_) {
+                errors.push("Please enter a valid campaign website URL.");
+            }
+        }
+    }
+
     // Email Regex
     const emailInput = document.getElementById('contact-email');
     if (emailInput && emailInput.value) {
@@ -575,6 +594,65 @@ if (phoneInputField) {
 
     phoneInputField.addEventListener('blur', validatePhone);
     phoneInputField.addEventListener('input', resetPhoneError);
+}
+
+// Website Validation
+const websiteInput = document.getElementById('website');
+const websiteError = document.getElementById('website-error');
+
+if (websiteInput) {
+    const validateWebsite = () => {
+        let value = websiteInput.value.trim();
+        
+        if (!value) {
+            if (websiteError) {
+                websiteError.classList.add('hidden');
+                websiteError.textContent = '';
+            }
+            websiteInput.classList.remove("!border-red-600");
+            return true;
+        }
+
+        // Auto-fix missing protocol
+        if (!/^https?:\/\//i.test(value)) {
+            value = 'https://' + value;
+            websiteInput.value = value;
+        }
+
+        // Must be https
+        if (!/^https:\/\//i.test(value)) {
+             if (websiteError) {
+                 websiteError.textContent = "Website must use a secure https:// link.";
+                 websiteError.classList.remove('hidden');
+             }
+             websiteInput.classList.add("!border-red-600");
+             return false;
+        }
+
+        // Basic URL validation
+        try {
+            new URL(value);
+            if (websiteError) {
+                websiteError.classList.add('hidden');
+                websiteError.textContent = '';
+            }
+            websiteInput.classList.remove("!border-red-600");
+            return true;
+        } catch (_) {
+            if (websiteError) {
+                websiteError.textContent = "Please enter a valid website URL.";
+                websiteError.classList.remove('hidden');
+            }
+            websiteInput.classList.add("!border-red-600");
+            return false;
+        }
+    };
+
+    websiteInput.addEventListener('blur', validateWebsite);
+    websiteInput.addEventListener('input', () => {
+        if (websiteError) websiteError.classList.add('hidden');
+        websiteInput.classList.remove("!border-red-600");
+    });
 }
 
 // Email Validation
@@ -810,6 +888,7 @@ if (form) {
                 title: toTitleCase(document.getElementById('position-title').value),
                 party: formatParty(document.getElementById('party').value),
                 electionDate: document.getElementById('election-date').value,
+                website: document.getElementById('website').value.trim() || undefined,
                 categories: formattedCategories,
                 tags: formattedTags,
                 about: document.getElementById('about').value,

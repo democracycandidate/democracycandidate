@@ -198,7 +198,11 @@ function escapeRegex(str: string): string {
  * Generate Hugo frontmatter from submission
  */
 function generateFrontmatter(submission: CandidateSubmission, avatarFilename?: string, imageFilename?: string): string {
-    const slug = submission.candidate.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+    const optionalFields: string[] = [];
+    if (submission.website) {
+        optionalFields.push(`website: "${submission.website}"`);
+    }
+    const optionalBlock = optionalFields.length > 0 ? '\n' + optionalFields.join('\n') : '';
 
     return `---
 title: "${submission.title}"
@@ -212,7 +216,7 @@ categories: ${JSON.stringify(submission.categories)}
 tags: ${JSON.stringify(submission.tags)}
 draft: true
 avatar: "${avatarFilename || ""}"
-about: "${submission.about.replace(/"/g, '\\"')}"
+about: "${submission.about.replace(/"/g, '\\"')}"${optionalBlock}
 ---
 
 ${submission.content}

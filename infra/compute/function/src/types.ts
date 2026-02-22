@@ -12,6 +12,7 @@ export interface CandidateSubmission {
     categories: string[];    // ["School Board", "Illinois"]
     tags: string[];          // ["Lake Park", "High School"]
     about: string;           // Short bio for card display
+    website?: string;        // Campaign website URL
 
     // Markdown body content
     content: string;         // Full markdown content (Policy, Experience, etc.)

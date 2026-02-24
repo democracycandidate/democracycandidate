@@ -214,7 +214,7 @@ election_date: ${submission.electionDate}T12:00:00Z
 image: "${imageFilename || ""}"
 categories: ${JSON.stringify(submission.categories)}
 tags: ${JSON.stringify(submission.tags)}
-draft: true
+draft: false
 avatar: "${avatarFilename || ""}"
 about: "${submission.about.replace(/"/g, '\\"')}"${optionalBlock}
 ---

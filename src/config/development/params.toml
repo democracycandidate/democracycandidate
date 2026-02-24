@@ -1,0 +1,6 @@
+# Development-specific parameters
+# These override the values in _default/params.toml when running `hugo server`
+
+# API Configuration for local development
+[api]
+submit_candidate_url = "http://localhost:7071/api/submitCandidate"

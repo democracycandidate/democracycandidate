@@ -30,6 +30,12 @@ url = "/running/pledge"
 weight = 2
 
 [[main]]
+parent = "Running?"
+name = "Add a Candidate"
+url = "/running/contribute"
+weight = 3
+
+[[main]]
 name = "Candidates"
 url = "/candidates"
 weight = 4

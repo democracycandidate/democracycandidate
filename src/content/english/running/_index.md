@@ -22,12 +22,12 @@ We do **not** accept candidates for state legislative, statewide, or federal off
 
 ### Getting Started
 
-Ready to create your profile? Here's what you need to do:
+Ready to create a candidate profile? Here's the process:
 
-1. **Review and sign the [pro-democracy pledge](/running/pledge)**
+1. **Ensure the candidate reviews and agrees to the [pro-democracy pledge](/running/pledge)**
 2. **Prepare your candidate information** (bio, photo, positions, contact info)
-3. **Submit your profile** via our [GitHub repository](https://github.com/democracycandidate/democracycandidate)
-    * Please do not copy content from your other web presences.  This site is focused on providing good search results for interested voters.  Copying content can hurt the site's reputation and search engine optimization by making it appear to be an aggregator instead of a unique resource.
-    * Be sure to read the [contribution guidelines](https://github.com/democracycandidate/democracycandidate/blob/main/CONTRIBUTING.md)
+3. **Contribute your candidate profile** using our [online form](/running/contribute) or via our [GitHub repository](https://github.com/democracycandidate/democracycandidate?tab=contributing-ov-file#readme)
+
+{{< contribution-requirements >}}
 
 Questions? Check out our [About page](/about), view [current candidate profiles](/candidates) for examples, or open an issue on our [GitHub repository](https://github.com/democracycandidate/democracycandidate/issues) to ask questions.

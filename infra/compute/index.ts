@@ -114,6 +114,9 @@ const functionApp = new azure.web.WebApp(`${prefix}-func`, {
             { name: "GITHUB_REPO_NAME", value: githubRepoName },
             { name: "GITHUB_FORM_REPO_NAME", value: githubFormRepoName },
 
+            // CORS allowed origins (comma-separated) — read by function code for reliable preflight handling
+            { name: "ALLOWED_ORIGINS", value: allowedOrigins.join(",") },
+
             // Cloudflare Turnstile
             { name: "TURNSTILE_SECRET_KEY", value: turnstileSecretKey },
         ],

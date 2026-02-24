@@ -10,3 +10,9 @@
 .nav-dropdown-link {
     @apply hover:bg-gray-100 dark:hover:bg-darkmode-theme-light px-2 rounded transition-colors;
 }
+
+// Global section spacing override
+// Custom section utility for minimal top margin (approx 1em/1rem) but standard bottom spacing
+.section-compact {
+    @apply pt-4 pb-24 xl:pt-4 xl:pb-28;
+}

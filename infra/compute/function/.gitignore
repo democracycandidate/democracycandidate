@@ -1,0 +1,19 @@
+# Azure Functions
+local.settings.json
+bin/
+obj/
+.vscode/
+
+# TypeScript
+dist/
+*.js.map
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Azurite storage emulator
+.azurite/
+__blobstorage__/
+__queuestorage__/
+__azurite_db*__.json

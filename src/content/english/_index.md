@@ -3,7 +3,7 @@ voters:
   title: "Are you a voter?"
   content: "This site does not endorse or take money from candidates.  Listings here guarantee two things:"
   bulletpoints:
-      - "Candidates have signed the pro-democracy pledge."
+      - "Candidates have signed the [pro-democracy pledge](/pledge)."
       - "They or somebody on their behalf [posted about them](https://github.com/democracycandidate/democracycandidate)."
   image: "/images/voter.png"
   buttons:

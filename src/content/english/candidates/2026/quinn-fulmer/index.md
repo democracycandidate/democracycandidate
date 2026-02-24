@@ -1,17 +1,17 @@
 ---
-title: "Dupage Forest Preserve District 1"
-meta_title: "Quinn Fulmer for Dupage Forest Preserve District 1"
-description: "Quinn Fulmer for Dupage Forest Preserve District 1"
+title: "DuPage Forest Preserve District 1"
+meta_title: "Quinn Fulmer for DuPage Forest Preserve District 1"
+description: "Quinn Fulmer for DuPage Forest Preserve District 1"
 candidate: "Quinn Fulmer"
 party: "Democrat"
 election_date: 2026-03-17T12:00:00Z
 image: "quinn-fulmer-title.jpg"
 categories: ["Forest Preserve","Illinois"]
-tags: ["Dupage","Dupage County","Dupage Forest Preserve District 1","Illinois"]
-draft: true
+tags: ["DuPage, IL","DuPage County","DuPage Forest Preserve District 1"]
+draft: false
 avatar: "quinn-fulmer-avatar.jpg"
 about: "Quinn Fulmer is a lifelong Roselle resident who has dedicated his life to protecting the natural spaces that make DuPage County special. A current Board Member for Roselle School District 12, Quinn pairs deep local roots with proven leadership, fiscal responsibility, and vast ecological knowledge. He earned his Eagle Scout rank with Medinah Troop 95 and graduated from the University of Wisconsin - Stevens Point with a degree in Wildlife Ecology. With over a decade of experience in habitat management specializing in native bird conservation, Quinn is a hands-on leader and dedicated environmentalist. In his free time, Quinn mentors high school students through Lake Park High School’s Earth Club, where he guides restoration projects, grows and protects endangered native plants, and shares his passion with the next generation. He also volunteers with the Chicago Bird Collision Monitors to rescue injured birds, and with the Roselle Park District in their ongoing habitat restorations. Quinn has successfully received funding for research through grant programs through UWSP and thus has a full understanding of how to strategically allocate funds to specific priorities such as resource management and onsite field data collection. Quinn Fulmer’s combination of professional expertise, dedication to community service, and unwavering commitment to native species restoration make him uniquely qualified to serve as Forest Preserve Commissioner, where he can aid in the Forest Preserve’s mission to ensure our natural areas thrive for generations to come."
-website: "https://fulmerforforest.com"
+website: "https://www.fulmerforforest.com/"
 ---
 
 ### Policy
@@ -34,23 +34,13 @@ As a wildlife ecologist and former Eagle Scout, I’ve led habitat restorations,
 
 I am grateful to be endorsed by:
 
-Bloomingdale Township Democratic Organization; 
-
-Liz Chaplin, DuPage County Recorder;
-
-Tom Della Penna, Roselle Village Trustee;
-
-Terrell Barnes, BTDO Chair and Roselle Public Library District Trustee; 
-
-Ian Neitzke, Medinah School District 11 Board Member; 
-
-Michael Murray, BTDO Treasurer;
-
-Amanda Hausman, Former Roselle Village Clerk
-
-Ashley Cook, BTDO Treasurer Pro-Tem and Roselle Public Library District Trustee; 
-
-Greg Martucci, Bloomingdale Township Trustee;
-
-Donald Fulmer and Chris Roll, Former and current Lake Park High School Union Presidents
-
+* Bloomingdale Township Democratic Organization; 
+* Liz Chaplin, DuPage County Recorder;
+* Tom Della Penna, Roselle Village Trustee;
+* Terrell Barnes, BTDO Chair and Roselle Public Library District Trustee; 
+* Ian Neitzke, Medinah School District 11 Board Member; 
+* Michael Murray, BTDO Treasurer;
+* Amanda Hausman, Former Roselle Village Clerk
+* Ashley Cook, BTDO Treasurer Pro-Tem and Roselle Public Library District Trustee; 
+* Greg Martucci, Bloomingdale Township Trustee;
+* Donald Fulmer and Chris Roll, Former and current Lake Park High School Union Presidents

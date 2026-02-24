@@ -3,7 +3,7 @@
 
 <section class="section">
   <div class="container">
-    {{ partial "components/candidate-list-grouped" (dict "Pages" .Pages "ShowSidebar" true "Context" .) }}
+    {{ partial "components/candidate-list-grouped" (dict "Pages" .RegularPagesRecursive "ShowSidebar" true "Context" .) }}
   </div>
 </section>
 {{ end }}

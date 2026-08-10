@@ -1,0 +1,52 @@
+name: Infra Preview
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'infra/**'
+      - '.github/actions/pulumi/**'
+
+env:
+  PULUMI_STACK: prod
+  PULUMI_ORG: zacdirect
+  PULUMI_USER: user:zacdirect
+  PULUMI_TOKEN_TYPE: urn:pulumi:token-type:access_token:personal
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  preview:
+    name: Preview
+    runs-on: ubuntu-latest
+    environment: prod
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          allow-unsafe-pr-checkout: true
+
+      - name: Pulumi Preview (Compute)
+        uses: ./.github/actions/pulumi
+        with:
+          stack-name: ${{ env.PULUMI_STACK }}
+          organization: ${{ env.PULUMI_ORG }}
+          requested-token-type: ${{ env.PULUMI_TOKEN_TYPE }}
+          scope: ${{ env.PULUMI_USER }}
+          command: preview
+          work-dir: ./infra/compute
+
+      - name: Pulumi Preview (Publishing)
+        uses: ./.github/actions/pulumi
+        with:
+          stack-name: ${{ env.PULUMI_STACK }}
+          organization: ${{ env.PULUMI_ORG }}
+          requested-token-type: ${{ env.PULUMI_TOKEN_TYPE }}
+          scope: ${{ env.PULUMI_USER }}
+          command: preview
+          work-dir: ./infra/publishing

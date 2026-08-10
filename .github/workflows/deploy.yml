@@ -72,6 +72,9 @@ jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    environment:
+      name: prod
+      url: https://www.democracycandidate.us
     needs: [build-and-test, infra-compute, infra-publishing]
     if: ${{ !cancelled()
       && needs.build-and-test.result == 'success'

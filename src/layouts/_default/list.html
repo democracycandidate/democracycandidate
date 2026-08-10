@@ -14,14 +14,6 @@
             </a>
           </li>
         {{ end }}
-        <div class="container">
-          <div class="row justify-center">
-            <div class="md:col-10 lg:col-7 text-center">
-              {{ partial "image" (dict "Src" .Params.image "Context" .Page "Alt" .Title "Class" "mx-auto mb-6") }}
-              <div class="content">{{ .Content }}</div>
-            </div>
-          </div>
-        </div>
       </ul>
       {{ partial "components/share-row" . }}
     </div>

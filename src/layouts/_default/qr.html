@@ -1,0 +1,55 @@
+{{ define "main" }}
+  {{ partial "page-header" . }}
+
+  <section class="section-compact">
+    <div class="container">
+      <div class="row justify-center">
+        <div class="lg:col-10">
+          <div class="content mb-12">
+            {{ .Content }}
+          </div>
+
+          {{ $groups := slice
+            (dict "heading" (T "qr_group_pages") "kinds" (slice "home" "page"))
+            (dict "heading" (T "qr_group_sections") "kinds" (slice "section" "taxonomy"))
+            (dict "heading" (T "qr_group_terms") "kinds" (slice "term"))
+          }}
+
+          {{ range $groups }}
+            {{ $heading := .heading }}
+            {{ $pages := where (where (where site.Pages "Kind" "in" .kinds) "Permalink" "!=" "") "Permalink" "!=" $.Permalink }}
+
+            {{ with sort $pages "Title" }}
+              <h2 class="h4 mb-6">{{ $heading }}</h2>
+              <div class="row mb-10">
+                {{ range . }}
+                  {{ $p := . }}
+                  {{ $label := $p.Title | default site.Title }}
+                  {{ with images.QR $p.Permalink (dict "level" "medium" "scale" 4 "targetDir" "qr") }}
+                    <div class="col-12 sm:col-6 md:col-4">
+                      <div class="qr-card">
+                        <img
+                          src="{{ .RelPermalink }}"
+                          width="{{ .Width }}"
+                          height="{{ .Height }}"
+                          loading="lazy"
+                          alt="{{ printf `%s %s` (T `share_qr_alt_for`) $label }}">
+                        <p class="mt-3 mb-1 font-semibold">
+                          <a href="{{ $p.RelPermalink }}">{{ $label }}</a>
+                        </p>
+                        <a class="share-qr-download" href="{{ .RelPermalink }}" download>
+                          {{ T `share_qr_download` }}
+                        </a>
+                      </div>
+                    </div>
+                  {{ end }}
+                {{ end }}
+              </div>
+            {{ end }}
+          {{ end }}
+        </div>
+      </div>
+      {{ partial "components/share-row" . }}
+    </div>
+  </section>
+{{ end }}

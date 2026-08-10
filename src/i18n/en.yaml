@@ -24,3 +24,10 @@ past_elections: Past Elections
 no_upcoming_elections: No upcoming elections at this time. Check back closer to your local election dates!
 pledge_version: Pledge Version
 pledged: Pledged
+share_qr: Share via QR code
+share_qr_alt: QR code linking to this page
+share_qr_download: Download PNG
+share_qr_alt_for: QR code linking to
+qr_group_pages: Pages
+qr_group_sections: Sections
+qr_group_terms: Tags and Categories

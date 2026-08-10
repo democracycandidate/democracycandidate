@@ -16,3 +16,37 @@
 .section-compact {
     @apply pt-4 pb-24 xl:pt-4 xl:pb-28;
 }
+
+.share-qr {
+    @apply relative inline-block align-middle;
+}
+
+.share-qr-toggle {
+    @apply cursor-pointer list-none;
+
+    &::-webkit-details-marker {
+        display: none;
+    }
+}
+
+.share-qr-panel {
+    @apply dark:bg-darkmode-body border-border dark:border-darkmode-border absolute right-0 z-30 mt-1 flex w-max flex-col items-center gap-2 rounded border bg-white p-3 shadow-lg;
+}
+
+.share-qr-image {
+    @apply h-40 w-40 bg-white;
+    image-rendering: pixelated;
+}
+
+.share-qr-download {
+    @apply text-sm underline;
+}
+
+.qr-card {
+    @apply border-border dark:border-darkmode-border mb-6 flex flex-col items-center rounded border p-4 text-center;
+}
+
+.qr-card img {
+    @apply h-36 w-36 bg-white;
+    image-rendering: pixelated;
+}

@@ -34,8 +34,7 @@
 }
 
 .share-qr-image {
-    @apply h-40 w-40 bg-white;
-    image-rendering: pixelated;
+    @apply h-auto max-w-full bg-white;
 }
 
 .share-qr-download {
@@ -47,6 +46,5 @@
 }
 
 .qr-card img {
-    @apply h-36 w-36 bg-white;
-    image-rendering: pixelated;
+    @apply h-auto max-w-full bg-white;
 }
